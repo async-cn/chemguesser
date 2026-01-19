@@ -1,5 +1,9 @@
 # ChemGuesser 化学猜盐
 
+![](https://img.shields.io/badge/License-MIT-blue)
+![](https://img.shields.io/badge/Version-1.0-green)
+![](https://img.shields.io/badge/Python-3.x-blue)
+
 > [!NOTE]
 > 
 > 开发中，敬请期待。
@@ -16,7 +20,13 @@
 git clone https://github.com/async-cn/chemguesser.git
 ```
 
-2. **配置环境：** 进入 chemguess 目录，找到 .env.example 文件，配置模型、URL 以及 API Key：
+2. **安装依赖：** 进入 chemguess 目录，执行命令：
+
+```bash
+pip install -r requirements.txt
+```
+
+3. **配置环境：** 在找到 .env.example 文件，在其中设置模型、URL 以及 API Key：
 
 ```dotenv
 BASEURL=https://api.deepseek.com
@@ -26,7 +36,7 @@ MODEL=deepseek-chat
 
 配置完成后，将 .env.example 文件 **重命名为为 .env** 。
 
-3. **启动游戏**：在 chemguess 目录下执行命令：
+4. **启动游戏**：在 chemguess 目录下执行命令：
 
 ```bash
 python run-terminal.py
