@@ -59,28 +59,26 @@ def initialize_database(app, db):
         logger.error(f"数据库初始化失败: {e}")
         return False
 
-if __name__ == "__main__":
+def start_server():
     """启动服务器"""
     logger.info("启动 ChemGuesser 服务器...")
 
     # 检查环境
     if not check_environment():
         import sys
-
         sys.exit(1)
 
     try:
         # 导入应用创建函数和数据库
         import sys
-
         sys.path.append('.')
         from app import create_app, db
 
         # 创建应用实例
-        chemguesser_app = create_app()
+        app = create_app()
 
         # 初始化数据库
-        if not initialize_database(chemguesser_app, db):
+        if not initialize_database(app, db):
             sys.exit(1)
 
         # 获取服务器配置
@@ -93,7 +91,7 @@ if __name__ == "__main__":
         logger.info("按 Ctrl+C 停止服务器")
 
         # 启动服务器
-        chemguesser_app.run(host=host, port=port, debug=debug)
+        app.run(host=host, port=port, debug=debug)
 
     except ImportError as e:
         logger.error(f"导入模块失败: {e}")
@@ -102,3 +100,6 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"启动服务器失败: {e}")
         sys.exit(1)
+
+if __name__ == "__main__":
+    start_server()
