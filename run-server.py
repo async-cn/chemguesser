@@ -13,8 +13,6 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-chemguesser_app = None
-
 def check_environment():
     """检查环境配置"""
     logger.info("检查环境配置...")
@@ -61,41 +59,42 @@ def initialize_database(app, db):
         logger.error(f"数据库初始化失败: {e}")
         return False
 
-def start_server():
+if __name__ == "__main__":
     """启动服务器"""
     logger.info("启动 ChemGuesser 服务器...")
-    global chemguesser_app
-    
+
     # 检查环境
     if not check_environment():
         import sys
+
         sys.exit(1)
-    
+
     try:
         # 导入应用创建函数和数据库
         import sys
+
         sys.path.append('.')
         from app import create_app, db
-        
+
         # 创建应用实例
         chemguesser_app = create_app()
-        
+
         # 初始化数据库
         if not initialize_database(chemguesser_app, db):
             sys.exit(1)
-        
+
         # 获取服务器配置
         host = os.getenv("WEBSITE_ADDR", "localhost")
         port = int(os.getenv("WEBSITE_PORT", "5000"))
         debug = os.getenv("FLASK_ENV") == "development"
-        
+
         logger.info(f"服务器将在 http://{host}:{port} 启动")
         logger.info(f"运行环境: {'开发模式' if debug else '生产模式'}")
         logger.info("按 Ctrl+C 停止服务器")
-        
+
         # 启动服务器
         chemguesser_app.run(host=host, port=port, debug=debug)
-        
+
     except ImportError as e:
         logger.error(f"导入模块失败: {e}")
         logger.error("请确保已安装所有依赖 (pip install -r requirements.txt)")
@@ -103,6 +102,3 @@ def start_server():
     except Exception as e:
         logger.error(f"启动服务器失败: {e}")
         sys.exit(1)
-
-if __name__ == "__main__":
-    start_server()
