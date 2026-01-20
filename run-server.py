@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+chemguesser_app = None
+
 def check_environment():
     """检查环境配置"""
     logger.info("检查环境配置...")
@@ -62,6 +64,7 @@ def initialize_database(app, db):
 def start_server():
     """启动服务器"""
     logger.info("启动 ChemGuesser 服务器...")
+    global chemguesser_app
     
     # 检查环境
     if not check_environment():
@@ -75,10 +78,10 @@ def start_server():
         from app import create_app, db
         
         # 创建应用实例
-        app = create_app()
+        chemguesser_app = create_app()
         
         # 初始化数据库
-        if not initialize_database(app, db):
+        if not initialize_database(chemguesser_app, db):
             sys.exit(1)
         
         # 获取服务器配置
@@ -91,7 +94,7 @@ def start_server():
         logger.info("按 Ctrl+C 停止服务器")
         
         # 启动服务器
-        app.run(host=host, port=port, debug=debug)
+        chemguesser_app.run(host=host, port=port, debug=debug)
         
     except ImportError as e:
         logger.error(f"导入模块失败: {e}")
