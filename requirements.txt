@@ -1,2 +1,11 @@
 openai
 python-dotenv
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Bcrypt
+Flask-Login
+Flask-WTF
+pymysql
+email-validator
+flask-socketio

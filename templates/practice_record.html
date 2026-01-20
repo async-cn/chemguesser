@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block title %}Practice Record{% endblock %}
+{% block content %}
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white p-4">
+                        <h2 class="mb-0">练习记录</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        {% if records %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>日期</th>
+                                            <th>题目</th>
+                                            <th>难度</th>
+                                            <th>猜测次数</th>
+                                            <th>结果</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for record in records %}
+                                            <tr>
+                                                <td>{{ record.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                                <td>{{ record.problem }}</td>
+                                                <td>{{ record.difficulty }}</td>
+                                                <td>{{ record.guess_count }}</td>
+                                                <td>
+                                                    {% if record.correct %}
+                                                        <span class="badge bg-success">正确</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">错误</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-calendar-check display-4 text-muted mb-3"></i>
+                                <h3 class="text-muted">暂无练习记录</h3>
+                                <p class="text-muted">开始练习，记录你的进步吧！</p>
+                                <a href="{{ url_for('games.practice') }}" class="btn btn-primary btn-lg mt-3">开始练习</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

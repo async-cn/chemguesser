@@ -1,0 +1,397 @@
+{% extends "layout.html" %}
+{% block title %}Practice Mode{% endblock %}
+{% block content %}
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h2 class="mb-0">练习模式</h2>
+                            <div class="d-flex gap-2">
+                                <button id="newGameBtn" class="btn btn-light btn-sm">新游戏</button>
+                                <button id="quitBtn" class="btn btn-light btn-sm">退出</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- 游戏设置区域 -->
+                        <div class="p-4 border-bottom">
+                            <h5 class="text-muted mb-3">游戏设置</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="difficulty" class="form-label text-muted">难度选择</label>
+                                    <select id="difficulty" class="form-select border-primary">
+                                        <option value="beginner">入门模式 (easy:0.9, mid-easy:0.1, mid:0)</option>
+                                        <option value="easy" selected>简单模式 (easy:0.5, mid-easy:0.5, mid:0)</option>
+                                        <option value="advanced">进阶模式 (easy:0.2, mid-easy:0.8, mid:0)</option>
+                                        <option value="medium">中等模式 (easy:0.1, mid-easy:0.8, mid:0.1)</option>
+                                        <option value="hard">困难模式 (easy:0, mid-easy:0.3, mid:0.7)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 d-flex align-items-end">
+                                    <button id="startGameBtn" class="btn btn-primary w-100">开始游戏</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 游戏状态区域 -->
+                        <div class="p-4 border-bottom" id="gameStatus" style="display: none;">
+                            <h5 class="text-muted mb-3">游戏状态</h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="card bg-light border-primary">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted">猜测次数</h6>
+                                            <p id="guessCount" class="display-6 text-primary mb-0">0</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light border-primary">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted">难度</h6>
+                                            <p id="gameDifficulty" class="display-6 text-primary mb-0"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light border-primary">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted">游戏状态</h6>
+                                            <p id="gameState" class="display-6 text-primary mb-0">进行中</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 对话历史区域 -->
+                        <div class="p-4" style="height: 400px; overflow-y: auto;" id="conversationHistory">
+                            <div class="text-center text-muted py-5">
+                                <i class="bi bi-chat-dots display-4 mb-3"></i>
+                                <p>点击"开始游戏"按钮开始练习</p>
+                                <p class="text-sm">您可以提问有关物质的问题，或直接猜测物质名称</p>
+                            </div>
+                        </div>
+
+                        <!-- 输入区域 -->
+                        <div class="p-4 border-top" id="inputArea" style="display: none;">
+                            <div class="input-group">
+                                <input type="text" id="questionInput" class="form-control border-primary" placeholder="输入您的问题或直接猜测物质名称..." aria-label="输入您的问题或直接猜测物质名称...">
+                                <button class="btn btn-primary" type="button" id="submitBtn">发送</button>
+                            </div>
+                            <div class="text-sm text-muted mt-2">
+                                <p>示例：</p>
+                                <ul class="list-unstyled d-flex flex-wrap gap-2">
+                                    <li class="bg-light px-2 py-1 rounded">该物质是否是氧化物？</li>
+                                    <li class="bg-light px-2 py-1 rounded">该物质是否含有金属元素？</li>
+                                    <li class="bg-light px-2 py-1 rounded">氯化钠</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏结束模态框 -->
+    <div class="modal fade" id="gameEndModal" tabindex="-1" aria-labelledby="gameEndModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-primary">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="gameEndModalLabel">游戏结束</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-5">
+                    <i id="resultIcon" class="bi bi-check-circle display-4 text-primary mb-3"></i>
+                    <h3 id="resultTitle" class="mb-3"></h3>
+                    <p id="resultMessage" class="text-muted mb-4"></p>
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-6">
+                            <div class="card bg-light border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-muted">猜测次数</h6>
+                                    <p id="finalGuessCount" class="display-6 text-primary mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-muted">正确物质</h6>
+                                    <p id="correctSubstance" class="display-6 text-primary mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-top-0 p-4">
+                    <button type="button" class="btn btn-primary btn-lg" id="playAgainBtn">再玩一次</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let gameState = {
+            isPlaying: false,
+            difficulty: '',
+            guessCount: 0,
+            conversation: [],
+            gameId: ''
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定事件
+            document.getElementById('startGameBtn').addEventListener('click', startGame);
+            document.getElementById('newGameBtn').addEventListener('click', startGame);
+            document.getElementById('quitBtn').addEventListener('click', quitGame);
+            document.getElementById('submitBtn').addEventListener('click', submitQuestion);
+            document.getElementById('questionInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitQuestion();
+                }
+            });
+            document.getElementById('playAgainBtn').addEventListener('click', function() {
+                const modal = new bootstrap.Modal(document.getElementById('gameEndModal'));
+                modal.hide();
+                startGame();
+            });
+        });
+
+        // 开始游戏
+        function startGame() {
+            // 获取难度选择
+            const difficultySelect = document.getElementById('difficulty');
+            const difficulty = difficultySelect.value;
+            gameState.difficulty = difficulty;
+            gameState.guessCount = 0;
+            gameState.conversation = [];
+            gameState.isPlaying = true;
+
+            // 更新界面
+            document.getElementById('gameStatus').style.display = 'block';
+            document.getElementById('inputArea').style.display = 'block';
+            document.getElementById('gameDifficulty').textContent = difficultySelect.options[difficultySelect.selectedIndex].value;
+            document.getElementById('guessCount').textContent = '0';
+            document.getElementById('gameState').textContent = '进行中';
+            document.getElementById('questionInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+
+            // 清空对话历史
+            const conversationHistory = document.getElementById('conversationHistory');
+            conversationHistory.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-lightbulb display-4 mb-3"></i>
+                    <p>游戏开始！请输入您的问题或直接猜测物质名称</p>
+                </div>
+            `;
+
+            // 聚焦输入框
+            document.getElementById('questionInput').focus();
+
+            // 发送开始游戏请求到后端
+            fetch('/practice/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ difficulty: difficulty })
+            })
+            .then(response => {
+                console.log("Starting request sent");
+                console.log(response);
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'error') {
+                    console.log("An error occured while game is starting");
+                    showError(data.message);
+                } else {
+                    // 保存游戏ID
+                    gameState.gameId = data.game_id;
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                showError('游戏开始失败，请稍后重试');
+            });
+        }
+
+        // 提交问题/猜测
+        function submitQuestion() {
+            if (!gameState.isPlaying) return;
+
+            const questionInput = document.getElementById('questionInput');
+            const question = questionInput.value.trim();
+
+            if (!question) {
+                return;
+            }
+
+            // 更新猜测次数
+            gameState.guessCount++;
+            document.getElementById('guessCount').textContent = gameState.guessCount;
+
+            // 添加到对话历史
+            addMessageToHistory('user', question);
+
+            // 清空输入框
+            questionInput.value = '';
+
+            // 禁用输入
+            questionInput.disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+
+            // 添加AI思考中的提示
+            const thinkingElement = addMessageToHistory('ai', '思考中...', true);
+
+            // 发送请求到后端
+            fetch('/practice/guess', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    game_id: gameState.gameId,
+                    question: question 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // 移除思考中的提示
+                thinkingElement.remove();
+
+                // 添加AI回答
+                addMessageToHistory('ai', data.answer);
+
+                // 检查游戏是否结束
+                if (data.answer === 'CORRECT') {
+                    endGame(true, data.correct_substance);
+                }
+
+                // 重新启用输入
+                questionInput.disabled = false;
+                document.getElementById('submitBtn').disabled = false;
+                questionInput.focus();
+            })
+            .catch(error => {
+                // 移除思考中的提示
+                thinkingElement.remove();
+                addMessageToHistory('ai', '抱歉，出现了错误，请稍后重试');
+                
+                // 重新启用输入
+                questionInput.disabled = false;
+                document.getElementById('submitBtn').disabled = false;
+                questionInput.focus();
+            });
+        }
+
+        // 添加消息到对话历史
+        function addMessageToHistory(sender, content, isThinking = false) {
+            const conversationHistory = document.getElementById('conversationHistory');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `p-3 mb-2 ${sender === 'user' ? 'bg-primary bg-opacity-10' : 'bg-light'} rounded`;
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = `d-flex ${sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`;
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `max-w-75 p-3 rounded ${sender === 'user' ? 'bg-primary text-white' : 'bg-white border border-primary text-dark'}`;
+            
+            if (isThinking) {
+                messageBubble.innerHTML = `<span class="text-muted"><i class="bi bi-hourglass-split me-2"></i>${content}</span>`;
+            } else {
+                messageBubble.textContent = content;
+            }
+            
+            messageContent.appendChild(messageBubble);
+            messageDiv.appendChild(messageContent);
+            conversationHistory.appendChild(messageDiv);
+            
+            // 滚动到底部
+            conversationHistory.scrollTop = conversationHistory.scrollHeight;
+            
+            return messageDiv;
+        }
+
+        // 结束游戏
+        function endGame(isWin, correctSubstance) {
+            gameState.isPlaying = false;
+            document.getElementById('gameState').textContent = '已结束';
+            document.getElementById('questionInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+
+            // 显示游戏结束模态框
+            const modal = new bootstrap.Modal(document.getElementById('gameEndModal'));
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            const finalGuessCount = document.getElementById('finalGuessCount');
+            const correctSubstanceEl = document.getElementById('correctSubstance');
+
+            if (isWin) {
+                resultIcon.className = 'bi bi-check-circle display-4 text-primary mb-3';
+                resultTitle.textContent = '恭喜你，你猜对了！';
+                resultMessage.textContent = '你太有实力了！';
+            } else {
+                resultIcon.className = 'bi bi-x-circle display-4 text-danger mb-3';
+                resultTitle.textContent = '游戏结束';
+                resultMessage.textContent = '你退出了游戏';
+            }
+
+            finalGuessCount.textContent = gameState.guessCount;
+            correctSubstanceEl.textContent = correctSubstance;
+
+            modal.show();
+        }
+
+        // 退出游戏
+        function quitGame() {
+            if (gameState.isPlaying) {
+                if (confirm('确定要退出游戏吗？')) {
+                    // 调用后端结束游戏接口，获取正确物质名称
+                    fetch('/practice/end', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ game_id: gameState.gameId })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // 使用获取到的正确物质名称结束游戏
+                            endGame(false, data.correct_substance);
+                        } else {
+                            // 如果出错，显示错误信息并使用默认值
+                            showError(data.message);
+                            endGame(false, '未知');
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        showError('退出游戏失败，请稍后重试');
+                        endGame(false, '未知');
+                    });
+                }
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const conversationHistory = document.getElementById('conversationHistory');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'text-center text-danger py-3';
+            errorDiv.textContent = message;
+            conversationHistory.appendChild(errorDiv);
+        }
+    </script>
+{% endblock %}

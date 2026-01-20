@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}About{% endblock %}
+{% block content %}
+    <div class="container mt-5">
+        <h1>关于ChemGuesser</h1>
+        <p class="lead">ChemGuesser是一个基于Flask框架开发的化学猜盐小游戏网站，旨在通过游戏的方式帮助用户学习和巩固化学知识。</p>
+        
+        <h2 class="mt-4">项目背景</h2>
+        <p>化学猜盐是一种经典的化学学习游戏，通过提问来猜测未知的化学物质。本项目将这种传统游戏数字化，添加了多种游戏模式和社交功能，为用户提供了一个有趣、互动的化学学习平台。</p>
+        
+        <h2 class="mt-4">功能特色</h2>
+        <ul>
+            <li>多种游戏模式：练习模式、玩家对战模式、AI对战模式</li>
+            <li>完整的账户系统：注册、登录、个人信息管理</li>
+            <li>ELO匹配系统：寻找旗鼓相当的对手</li>
+            <li>实时对战：WebSocket技术实现流畅的实时通信</li>
+            <li>详细的游戏记录：查看历史对战和练习记录</li>
+            <li>排行榜系统：展示玩家排名</li>
+        </ul>
+        
+        <h2 class="mt-4">技术栈</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <h3>后端</h3>
+                <ul>
+                    <li>Flask框架</li>
+                    <li>Python语言</li>
+                    <li>MySQL数据库</li>
+                    <li>WebSocket技术</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h3>前端</h3>
+                <ul>
+                    <li>HTML5</li>
+                    <li>CSS3</li>
+                    <li>JavaScript</li>
+                    <li>Bootstrap框架</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h3>其他</h3>
+                <ul>
+                    <li>OpenAI API</li>
+                    <li>ELO等级系统</li>
+                    <li>SMTP邮件服务</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

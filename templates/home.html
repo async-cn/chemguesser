@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="jumbotron">
+            <h1 class="display-4">欢迎来到ChemGuesser</h1>
+            <p class="lead">一款有点好玩的化学猜盐小游戏</p>
+            <hr class="my-4">
+<!--            <p>选择你想要的游戏模式，开始你的化学探索之旅吧！</p>-->
+            <p>选择游戏模式</p>
+            <div class="d-flex gap-3">
+                <a class="btn btn-primary btn-lg" href="{{ url_for('games.practice') }}" role="button">练习模式</a>
+                <a class="btn btn-success btn-lg" href="javascript:block();" role="button">玩家对战</a>
+                <a class="btn btn-warning btn-lg" href="javascript:block();" role="button">AI对战</a>
+            </div>
+        </div>
+        
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">练习模式</h5>
+                        <p class="card-text">单人练习，无限次猜测。</p>
+                        <a href="{{ url_for('games.practice') }}" class="btn btn-primary">开始练习</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">玩家对战</h5>
+                        <p class="card-text">与其他玩家实时对战，通过ELO匹配系统寻找旗鼓相当的对手。</p>
+                        <a href="javascript:block();" class="btn btn-success">开始对战</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">AI对战</h5>
+                        <p class="card-text">与智能AI对手进行对战。</p>
+                        <a href="javascript:block();" class="btn btn-warning">挑战AI</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        // pvp: {{ url_for('games.pvp') }}
+        // ai: {{ url_for('games.ai') }}
+        function block(){
+            alert("开发中，敬请期待");
+        }
+    </script>
+{% endblock %}

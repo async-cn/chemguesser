@@ -1,0 +1,186 @@
+{% extends "layout.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom-0 p-4">
+                        <h2 class="text-center text-primary">注册账户</h2>
+                        <p class="text-center text-muted mt-2">创建您的ChemGuesser账户，开始化学猜盐之旅</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="POST" action="">
+                            {{ form.hidden_tag() }}
+                            <fieldset class="form-group">
+                                <div class="mb-4">
+                                    {{ form.username.label(class="form-label text-muted") }}
+                                    {% if form.username.errors %}
+                                        {{ form.username(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.username.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.username(class="form-control border-primary") }}
+                                    {% endif %}
+                                </div>
+                                <div class="mb-4">
+                                    {{ form.email.label(class="form-label text-muted") }}
+                                    {% if form.email.errors %}
+                                        {{ form.email(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.email.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.email(class="form-control border-primary") }}
+                                    {% endif %}
+                                </div>
+                                <div class="mb-4">
+                                    {{ form.password.label(class="form-label text-muted") }}
+                                    {% if form.password.errors %}
+                                        {{ form.password(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.password.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.password(class="form-control border-primary") }}
+                                    {% endif %}
+                                </div>
+                                <div class="mb-4">
+                                    {{ form.confirm_password.label(class="form-label text-muted") }}
+                                    {% if form.confirm_password.errors %}
+                                        {{ form.confirm_password(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.confirm_password.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.confirm_password(class="form-control border-primary") }}
+                                    {% endif %}
+                                </div>
+                                <div class="mb-4">
+                                    {{ form.verification_method.label(class="form-label text-muted") }}
+                                    {% if form.verification_method.errors %}
+                                        {{ form.verification_method(class="form-select is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.verification_method.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.verification_method(class="form-select border-primary") }}
+                                    {% endif %}
+                                </div>
+                                <div id="emailVerification" class="mb-4" style="display: none;">
+                                    <div class="row g-3">
+                                        <div class="col">
+                                            {{ form.email_code.label(class="form-label text-muted") }}
+                                            {% if form.email_code.errors %}
+                                                {{ form.email_code(class="form-control is-invalid") }}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.email_code.errors %}
+                                                        <span>{{ error }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                {{ form.email_code(class="form-control border-primary") }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-auto d-flex align-items-end">
+                                            <button type="button" class="btn btn-primary" id="sendEmailCode">发送验证码</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="rootVerification" class="mb-4" style="display: none;">
+                                    {{ form.root_key.label(class="form-label text-muted") }}
+                                    {% if form.root_key.errors %}
+                                        {{ form.root_key(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.root_key.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.root_key(class="form-control border-primary") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset>
+                            <div class="form-group text-center mt-5">
+                                {{ form.submit(class="btn btn-primary btn-lg w-100") }}
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 p-4 text-center">
+                        <small class="text-muted">
+                            已经有账户了？ <a class="text-primary text-decoration-none" href="{{ url_for('users.login') }}">立即登录</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 监听验证方式选择变化
+        document.getElementById('verification_method').addEventListener('change', function() {
+            const method = this.value;
+            const emailVerification = document.getElementById('emailVerification');
+            const rootVerification = document.getElementById('rootVerification');
+            
+            if (method === 'email') {
+                emailVerification.style.display = 'block';
+                rootVerification.style.display = 'none';
+            } else if (method === 'root') {
+                emailVerification.style.display = 'none';
+                rootVerification.style.display = 'block';
+            }
+        });
+        
+        // 初始显示对应的验证方式
+        const initialMethod = document.getElementById('verification_method').value;
+        const emailVerification = document.getElementById('emailVerification');
+        const rootVerification = document.getElementById('rootVerification');
+        
+        if (initialMethod === 'email') {
+            emailVerification.style.display = 'block';
+        } else if (initialMethod === 'root') {
+            rootVerification.style.display = 'block';
+        }
+        
+        // 发送邮件验证码按钮点击事件
+        document.getElementById('sendEmailCode').addEventListener('click', function() {
+            const email = document.getElementById('email').value;
+            const button = this;
+            
+            if (!email) {
+                alert('请先输入邮箱地址');
+                return;
+            }
+            
+            // 禁用按钮并显示倒计时
+            button.disabled = true;
+            button.textContent = '60秒后重新发送';
+            
+            let countdown = 60;
+            const timer = setInterval(() => {
+                countdown--;
+                button.textContent = `${countdown}秒后重新发送`;
+                
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    button.disabled = false;
+                    button.textContent = '发送验证码';
+                }
+            }, 1000);
+            
+            // 这里可以添加发送验证码的AJAX请求
+            console.log('发送验证码到邮箱:', email);
+        });
+    </script>
+{% endblock %}

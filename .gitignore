@@ -24,3 +24,5 @@ logs/
 test-local/
 backup/
 config/generate/
+ignored/
+pyenv

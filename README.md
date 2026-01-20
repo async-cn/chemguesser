@@ -26,18 +26,39 @@ git clone https://github.com/async-cn/chemguesser.git
 pip install -r requirements.txt
 ```
 
-3. **配置环境：** 在找到 .env.example 文件，在其中设置模型、URL 以及 API Key：
+3. **配置环境：** 在找到 .env.example 文件，在其中设置模型、URL、API Key等一系列配置：
 
 ```dotenv
 BASEURL=https://api.deepseek.com
 APIKEY=your_api_key
 MODEL=deepseek-chat
+ROOT_KEY=your_custom_root_key_which_can_be_set_to_anything_you_like
+SMTP_SERVER=smtp.qq.com
+SMTP_PORT=465
+SMTP_ADDR=your_email_addr
+SMTP_KEY=your_smtp_key
+BATTLE_MODEL=deepseek-reasoner
+BATTLE_CONFIRM_TIME_LIMIT=45
+BATTLE_DAMAGE_BASE=200
+BATTLE_DAMAGE_SCALE_INCREASEMENT=0.25
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_pw
+MYSQL_DB=chemguesser
+WEBSITE_ADDR=localhost
+WEBSITE_PORT=2300
+FLASK_ENV=development
 ```
+
+其中MySQL部分暂无实际用途，用户数据目前通过SQLite存储。
 
 配置完成后，将 .env.example 文件 **重命名为为 .env** 。
 
 4. **启动游戏**：在 chemguess 目录下执行命令：
 
 ```bash
-python run-terminal.py
+python run-server.py
 ```
+
+并在浏览器中访问：[http://localhost:2300](http://localhost:2300)（若.env中设置了不同的端口，以具体设置为准）
