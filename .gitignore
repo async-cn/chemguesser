@@ -26,3 +26,5 @@ backup/
 config/generate/
 ignored/
 pyenv
+instance/chemguesser-local.db
+backup-*.*

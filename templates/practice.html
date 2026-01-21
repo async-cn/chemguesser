@@ -22,11 +22,11 @@
                                 <div class="col-md-6">
                                     <label for="difficulty" class="form-label text-muted">难度选择</label>
                                     <select id="difficulty" class="form-select border-primary">
-                                        <option value="beginner">入门模式 (easy:0.9, mid-easy:0.1, mid:0)</option>
-                                        <option value="easy" selected>简单模式 (easy:0.5, mid-easy:0.5, mid:0)</option>
-                                        <option value="advanced">进阶模式 (easy:0.2, mid-easy:0.8, mid:0)</option>
-                                        <option value="medium">中等模式 (easy:0.1, mid-easy:0.8, mid:0.1)</option>
-                                        <option value="hard">困难模式 (easy:0, mid-easy:0.3, mid:0.7)</option>
+                                        <option value="beginner">入门模式（90%初中,10%高中必修一）</option>
+                                        <option value="easy" selected>简单模式（50%初中，50%高中必修一）</option>
+                                        <option value="advanced">进阶模式（20%初中，80%高中必修一）</option>
+                                        <option value="medium">中等模式 (10%初中，80%高中必修一，10%超纲)</option>
+                                        <option value="hard">困难模式 (30%高中必修一，70%超纲)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 d-flex align-items-end">
@@ -82,12 +82,15 @@
                                 <button class="btn btn-primary" type="button" id="submitBtn">发送</button>
                             </div>
                             <div class="text-sm text-muted mt-2">
-                                <p>示例：</p>
+                                <p>提示：所有答案物质均为无机纯净物。</p>
+                                <p>可以点右上角“退出”投降哦~ <s>将军请走此小道</s></p>
+                                <p>提问示例：</p>
                                 <ul class="list-unstyled d-flex flex-wrap gap-2">
-                                    <li class="bg-light px-2 py-1 rounded">该物质是否是氧化物？</li>
-                                    <li class="bg-light px-2 py-1 rounded">该物质是否含有金属元素？</li>
+                                    <li class="bg-light px-2 py-1 rounded">是盐类吗？</li>
+                                    <li class="bg-light px-2 py-1 rounded">是否含有金属元素？</li>
                                     <li class="bg-light px-2 py-1 rounded">氯化钠</li>
                                 </ul>
+                                <p>严谨的表述有助于得到精确的答案。</p>
                             </div>
                         </div>
                     </div>
@@ -157,6 +160,8 @@
                 }
             });
             document.getElementById('playAgainBtn').addEventListener('click', function() {
+                window.location.reload();
+                return;
                 const modal = new bootstrap.Modal(document.getElementById('gameEndModal'));
                 modal.hide();
                 startGame();

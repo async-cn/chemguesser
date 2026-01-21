@@ -1,0 +1,306 @@
+{
+    "氢": {
+        "symbol": "H",
+        "index": 1,
+        "molarmass": 1,
+        "period": 1,
+        "maingroup": 1,
+        "is_spmg": true
+    },
+    "氦": {
+        "symbol": "He",
+        "index": 2,
+        "molarmass": 4,
+        "period": 1,
+        "maingroup": 8,
+        "is_spmg": false
+    },
+    "锂": {
+        "symbol": "Li",
+        "index": 3,
+        "molarmass": 7,
+        "period": 2,
+        "maingroup": 1,
+        "is_spmg": true
+    },
+    "铍": {
+        "symbol": "Be",
+        "index": 4,
+        "molarmass": 9,
+        "period": 2,
+        "maingroup": 2,
+        "is_spmg": true
+    },
+    "硼": {
+        "symbol": "B",
+        "index": 5,
+        "molarmass": 11,
+        "period": 2,
+        "maingroup": 3,
+        "is_spmg": true
+    },
+    "碳": {
+        "symbol": "C",
+        "index": 6,
+        "molarmass": 12,
+        "period": 2,
+        "maingroup": 4,
+        "is_spmg": true
+    },
+    "氮": {
+        "symbol": "N",
+        "index": 7,
+        "molarmass": 14,
+        "period": 2,
+        "maingroup": 5,
+        "is_spmg": true
+    },
+    "氧": {
+        "symbol": "O",
+        "index": 8,
+        "molarmass": 16,
+        "period": 2,
+        "maingroup": 6,
+        "is_spmg": true
+    },
+    "氟": {
+        "symbol": "F",
+        "index": 9,
+        "molarmass": 19,
+        "period": 2,
+        "maingroup": 7,
+        "is_spmg": true
+    },
+    "氖": {
+        "symbol": "Ne",
+        "index": 10,
+        "molarmass": 20,
+        "period": 2,
+        "maingroup": 8,
+        "is_spmg": false
+    },
+    "钠": {
+        "symbol": "Na",
+        "index": 11,
+        "molarmass": 23,
+        "period": 3,
+        "maingroup": 1,
+        "is_spmg": true
+    },
+    "镁": {
+        "symbol": "Mg",
+        "index": 12,
+        "molarmass": 24,
+        "period": 3,
+        "maingroup": 2,
+        "is_spmg": true
+    },
+    "铝": {
+        "symbol": "Al",
+        "index": 13,
+        "molarmass": 27,
+        "period": 3,
+        "maingroup": 3,
+        "is_spmg": true
+    },
+    "硅": {
+        "symbol": "Si",
+        "index": 14,
+        "molarmass": 28,
+        "period": 3,
+        "maingroup": 4,
+        "is_spmg": true
+    },
+    "磷": {
+        "symbol": "P",
+        "index": 15,
+        "molarmass": 31,
+        "period": 3,
+        "maingroup": 5,
+        "is_spmg": true
+    },
+    "硫": {
+        "symbol": "S",
+        "index": 16,
+        "molarmass": 32,
+        "period": 3,
+        "maingroup": 6,
+        "is_spmg": true
+    },
+    "氯": {
+        "symbol": "Cl",
+        "index": 17,
+        "molarmass": 35.5,
+        "period": 3,
+        "maingroup": 7,
+        "is_spmg": true
+    },
+    "氩": {
+        "symbol": "Ar",
+        "index": 18,
+        "molarmass": 40,
+        "period": 3,
+        "maingroup": 8,
+        "is_spmg": false
+    },
+    "钾": {
+        "symbol": "K",
+        "index": 19,
+        "molarmass": 39,
+        "period": 4,
+        "maingroup": 1,
+        "is_spmg": false
+    },
+    "钙": {
+        "symbol": "Ca",
+        "index": 20,
+        "molarmass": 40,
+        "period": 4,
+        "maingroup": 2,
+        "is_spmg": false
+    },
+    "钪": {
+        "symbol": "Sc",
+        "index": 21,
+        "molarmass": 45,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "钛": {
+        "symbol": "Ti",
+        "index": 22,
+        "molarmass": 48,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "钒": {
+        "symbol": "V",
+        "index": 23,
+        "molarmass": 51,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "铬": {
+        "symbol": "Cr",
+        "index": 24,
+        "molarmass": 52,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "锰": {
+        "symbol": "Mn",
+        "index": 25,
+        "molarmass": 55,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "铁": {
+        "symbol": "Fe",
+        "index": 26,
+        "molarmass": 56,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "钴": {
+        "symbol": "Co",
+        "index": 27,
+        "molarmass": 59,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "镍": {
+        "symbol": "Ni",
+        "index": 28,
+        "molarmass": 59,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "铜": {
+        "symbol": "Cu",
+        "index": 29,
+        "molarmass": 64,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "锌": {
+        "symbol": "Zn",
+        "index": 30,
+        "molarmass": 65,
+        "period": 4,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "镓": {
+        "symbol": "Ga",
+        "index": 31,
+        "molarmass": 70,
+        "period": 4,
+        "maingroup": 3,
+        "is_spmg": false
+    },
+    "锗": {
+        "symbol": "Ge",
+        "index": 32,
+        "molarmass": 73,
+        "period": 4,
+        "maingroup": 4,
+        "is_spmg": false
+    },
+    "砷": {
+        "symbol": "As",
+        "index": 33,
+        "molarmass": 75,
+        "period": 4,
+        "maingroup": 5,
+        "is_spmg": false
+    },
+    "硒": {
+        "symbol": "Se",
+        "index": 34,
+        "molarmass": 79,
+        "period": 4,
+        "maingroup": 6,
+        "is_spmg": false
+    },
+    "溴": {
+        "symbol": "Br",
+        "index": 35,
+        "molarmass": 80,
+        "period": 4,
+        "maingroup": 7,
+        "is_spmg": false
+    },
+    "银": {
+        "symbol": "Ag",
+        "index": 47,
+        "molarmass": 108,
+        "period": 5,
+        "maingroup": -1,
+        "is_spmg": false
+    },
+    "钡": {
+        "symbol": "Ba",
+        "index": 56,
+        "molarmass": 137,
+        "period": 6,
+        "maingroup": 2,
+        "is_spmg": false
+    },
+    "汞": {
+        "symbol": "Hg",
+        "index": 80,
+        "molarmass": 201,
+        "period": 6,
+        "maingroup": -1,
+        "is_spmg": false
+    }
+}

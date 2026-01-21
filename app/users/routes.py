@@ -15,7 +15,7 @@ def register():
         user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
+        flash('账户创建成功！请前往登录。', 'success')
         return redirect(url_for('users.login'))
     return render_template('register.html', title='Register', form=form)
 
@@ -31,7 +31,7 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.home'))
         else:
-            flash('Login Unsuccessful. Please check username and password', 'danger')
+            flash('登录失败，请检查用户名或密码是否正确。', 'danger')
     return render_template('login.html', title='Login', form=form)
 
 @users.route('/logout')

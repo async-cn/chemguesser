@@ -9,3 +9,4 @@ Flask-WTF
 pymysql
 email-validator
 flask-socketio
+markdown

@@ -8,6 +8,7 @@ import os
 import sys
 import logging
 from dotenv import load_dotenv
+from app import create_app, db
 
 # 设置日志格式
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -23,20 +24,20 @@ def check_environment():
         return False
     
     # 检查必要的环境变量
-    required_vars = [
-        "BASEURL", "APIKEY", "MODEL", "ROOT_KEY",
-        "SMTP_SERVER", "SMTP_PORT", "SMTP_ADDR", "SMTP_KEY",
-        "MYSQL_HOST", "MYSQL_PORT", "MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DB"
-    ]
+    # required_vars = [
+    #     "BASEURL", "APIKEY", "MODEL", "ROOT_KEY",
+    #     "SMTP_SERVER", "SMTP_PORT", "SMTP_ADDR", "SMTP_KEY",
+    #     "MYSQL_HOST", "MYSQL_PORT", "MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DB"
+    # ]
     
-    missing_vars = []
-    for var in required_vars:
-        if not os.getenv(var):
-            missing_vars.append(var)
+    # missing_vars = []
+    # for var in required_vars:
+    #     if not os.getenv(var):
+    #         missing_vars.append(var)
     
-    if missing_vars:
-        logger.error(f"缺少必要的环境变量: {', '.join(missing_vars)}")
-        return False
+    # if missing_vars:
+    #     logger.error(f"缺少必要的环境变量: {', '.join(missing_vars)}")
+    #     return False
     
     # 检查 API Key 是否为默认值
     if os.getenv("APIKEY") == "your_api_key":
@@ -69,19 +70,15 @@ def start_server():
         sys.exit(1)
 
     try:
-        # 导入应用创建函数和数据库
         import sys
         sys.path.append('.')
-        from app import create_app, db
-
-        # 创建应用实例
         app = create_app()
 
         # 初始化数据库
         if not initialize_database(app, db):
             sys.exit(1)
 
-        # 获取服务器配置
+        # 加载.env
         host = os.getenv("WEBSITE_ADDR", "localhost")
         port = int(os.getenv("WEBSITE_PORT", "5000"))
         debug = os.getenv("FLASK_ENV") == "development"
@@ -90,7 +87,6 @@ def start_server():
         logger.info(f"运行环境: {'开发模式' if debug else '生产模式'}")
         logger.info("按 Ctrl+C 停止服务器")
 
-        # 启动服务器
         app.run(host=host, port=port, debug=debug)
 
     except ImportError as e:

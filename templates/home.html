@@ -1,13 +1,25 @@
 {% extends "layout.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}化学猜盐 ChemGuesser{% endblock %}
 {% block content %}
     <div class="container mt-5">
+        
         <div class="jumbotron">
-            <h1 class="display-4">欢迎来到ChemGuesser</h1>
+            <h1 class="display-4">欢迎来到 ChemGuesser</h1>
             <p class="lead">一款有点好玩的化学猜盐小游戏</p>
-            <hr class="my-4">
-<!--            <p>选择你想要的游戏模式，开始你的化学探索之旅吧！</p>-->
-            <p>选择游戏模式</p>
+<!--            <hr class="my-4">-->
+            <!--<p>选择你想要的游戏模式，开始你的化学探索之旅吧！</p>-->
+            {% if notice_html %}
+            <div class="card" style="margin-bottom:12px">
+                <div class="card-header ">
+                    <h5 class="card-title" style="margin-bottom: 0;"><x></x>公告</h5>
+                </div>
+                <div class="card-body">
+                    {{ notice_html | safe }}
+                </div>
+            </div>
+            {% endif %}
+<!--            <hr class="my-4">-->
+<!--            <h4 style="margin: 12px 0">选择游戏模式</h4>-->
             <div class="d-flex gap-3">
                 <a class="btn btn-primary btn-lg" href="{{ url_for('games.practice') }}" role="button">练习模式</a>
                 <a class="btn btn-success btn-lg" href="javascript:block();" role="button">玩家对战</a>
@@ -15,31 +27,37 @@
             </div>
         </div>
         
-        <div class="row mt-5">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
+        <div class="row mt-5 h-100">
+            <div class="col-md-4 h-100">
+                <div class="card h-100 d-flex flex-column">
+                    <div class="card-body flex-grow-1 d-flex flex-column">
                         <h5 class="card-title">练习模式</h5>
                         <p class="card-text">单人练习，无限次猜测。</p>
-                        <a href="{{ url_for('games.practice') }}" class="btn btn-primary">开始练习</a>
+                        <div class="mt-auto">
+                            <a href="{{ url_for('games.practice') }}" class="btn btn-primary">开始练习</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
+            <div class="col-md-4 h-100">
+                <div class="card h-100 d-flex flex-column">
+                    <div class="card-body flex-grow-1 d-flex flex-column">
                         <h5 class="card-title">玩家对战</h5>
-                        <p class="card-text">与其他玩家实时对战，通过ELO匹配系统寻找旗鼓相当的对手。</p>
-                        <a href="javascript:block();" class="btn btn-success">开始对战</a>
+                        <p class="card-text">与旗鼓相当的对手实时对战。</p>
+                        <div class="mt-auto">
+                            <a href="javascript:block();" class="btn btn-success">开始对战</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
+            <div class="col-md-4 h-100">
+                <div class="card h-100 d-flex flex-column">
+                    <div class="card-body flex-grow-1 d-flex flex-column">
                         <h5 class="card-title">AI对战</h5>
                         <p class="card-text">与智能AI对手进行对战。</p>
-                        <a href="javascript:block();" class="btn btn-warning">挑战AI</a>
+                        <div class="mt-auto">
+                            <a href="javascript:block();" class="btn btn-warning">挑战AI</a>
+                        </div>
                     </div>
                 </div>
             </div>

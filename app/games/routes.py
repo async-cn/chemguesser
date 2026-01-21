@@ -4,15 +4,19 @@ from app import db
 from app.models import GameRecord, PracticeRecord, RoundRecord
 from app.games import games
 from src import game
-from src.ai import playerguess
+from src.ai import playerguess, AIChat
+from src.config import Config
 import random
+import os
+import threading
+import time
 from datetime import datetime
 
 @games.route('/practice')
 @login_required
 def practice():
     """练习模式页面"""
-    return render_template('practice.html', title='Practice Mode')
+    return render_template('practice.html', title='化学猜盐 - 练习模式')
 
 @games.route('/practice/start', methods=['POST'])
 @login_required
@@ -55,9 +59,12 @@ def start_practice():
             'difficulty': difficulty
         })
     except Exception as e:
+        import traceback
         return jsonify({
             'status': 'error',
-            'message': 'internal server error: '+str(e)
+            'message': f'internal server error: {str(e)}',
+            'error_type': type(e).__name__,
+            'traceback': traceback.format_exc()
         }), 500
 
 @games.route('/practice/guess', methods=['POST'])
@@ -132,9 +139,12 @@ def practice_guess():
             'game_ended': False
         })
     except Exception as e:
+        import traceback
         return jsonify({
             'status': 'error',
-            'message': 'internal server error: '+str(e)
+            'message': f'internal server error: {str(e)}',
+            'error_type': type(e).__name__,
+            'traceback': traceback.format_exc()
         }), 500
 
 @games.route('/practice/end', methods=['POST'])
@@ -205,6 +215,10 @@ def ai():
     """AI对战模式页面"""
     return render_template('ai.html', title='AI Mode')
 
+# 加载AI对战系统提示词
+with open(os.path.join(os.getcwd(), 'config', 'battle_prompt.md'), 'r', encoding='utf-8') as f:
+    AI_BATTLE_PROMPT = f.read()
+
 @games.route('/ai/start', methods=['POST'])
 @login_required
 def start_ai():
@@ -229,6 +243,16 @@ def start_ai():
         # 生成游戏ID
         game_id = f"ai_{current_user.id}_{int(datetime.now().timestamp())}"
         
+        # 创建日志目录
+        logs_dir = os.path.join(os.getcwd(), 'logs')
+        if not os.path.exists(logs_dir):
+            os.makedirs(logs_dir)
+        
+        # 生成日志文件名
+        timestamp = int(datetime.now().timestamp())
+        log_file_name = f"{game_id}-{timestamp}.log"
+        log_file_path = os.path.join(logs_dir, log_file_name)
+        
         # 初始化AI对战状态
         session[game_id] = {
             'game_id': game_id,
@@ -248,8 +272,18 @@ def start_ai():
             'start_time': datetime.now().isoformat(),
             'is_active': True,
             'ai_conversation': [],  # 存储AI对话历史，用于上下文管理
-            'round_start_time': datetime.now().isoformat()
+            'round_start_time': datetime.now().isoformat(),
+            'log_file_path': log_file_path  # 保存日志文件路径
         }
+        
+        # 启动第一轮AI对手线程
+        ai_thread = threading.Thread(
+            target=ai_opponent_thread,
+            args=(session[game_id].copy(), 1),
+            daemon=True
+        )
+        ai_thread.start()
+        # session[game_id]['ai_thread'] = ai_thread
         
         return jsonify({
             'status': 'success',
@@ -263,7 +297,7 @@ def start_ai():
     except Exception as e:
         return jsonify({
             'status': 'error',
-            'message': 'internal server error: '+str(e)
+            'message': f'internal server error: {str(e)}'
         }), 500
 
 @games.route('/ai/guess', methods=['POST'])
@@ -309,25 +343,21 @@ def ai_guess():
         game_state['player_guess_count'] += 1
         session[game_id] = game_state
         
+        # 记录玩家的提问
+        log_ai_battle_message(game_state, 'player', question)
+        
         # 调用AI获取回答
         answer = playerguess(game_state['problem'], question)
+        
+        # 记录系统对玩家的回答
+        log_ai_battle_message(game_state, 'system_to_player', answer)
         
         # 检查是否是直接猜测物质名称
         is_final_guess = answer in ['CORRECT', 'INCORRECT']
         
         # 如果是最终猜测，锁定玩家答案
         if is_final_guess:
-            game_state['player_answer_locked'] = True
-            game_state['player_final_guess'] = question
-            game_state['player_correct'] = (answer == 'CORRECT')
-            session[game_id] = game_state
-            
-            # 触发AI进行猜测
-            ai_response = trigger_ai_guess(game_state)
-            
-            # 如果AI也已锁定答案，结算本轮
-            if ai_response['ai_answer_locked']:
-                return settle_round(game_state)
+            return lock_player_answer(game_state, question, (answer == 'CORRECT'))
         
         return jsonify({
             'status': 'success',
@@ -382,28 +412,10 @@ def ai_lock_answer():
                 'message': '您已锁定答案，无法再次锁定'
             }), 400
         
-        # 锁定玩家答案（使用最后一次猜测作为最终答案）
-        game_state['player_answer_locked'] = True
-        game_state['player_final_guess'] = ''  # 这里应该使用玩家的最后一次猜测，暂时留空
-        game_state['player_correct'] = False
-        session[game_id] = game_state
-        
-        # 触发AI进行猜测
-        ai_response = trigger_ai_guess(game_state)
-        
-        # 如果AI也已锁定答案，结算本轮
-        if ai_response['ai_answer_locked']:
-            return settle_round(game_state)
-        
-        return jsonify({
-            'status': 'success',
-            'message': '答案已锁定',
-            'player_answer_locked': True,
-            'ai_answer_locked': game_state['ai_answer_locked'],
-            'round': game_state['round'],
-            'player_hp': game_state['player_hp'],
-            'ai_hp': game_state['ai_hp']
-        })
+        # 玩家手动锁定答案时，我们没有玩家的猜测，所以需要请求AI进行最终猜测
+        # 这里使用"未知"作为占位符，实际游戏中应该使用玩家的最后一次猜测
+        # 为了简化，我们直接锁定并让AI猜测
+        return lock_player_answer(game_state, "玩家手动锁定", False)
     except Exception as e:
         return jsonify({
             'status': 'error',
@@ -462,7 +474,6 @@ def leaderboard():
     """排行榜页面"""
     return render_template('leaderboard.html', title='Leaderboard')
 
-# 辅助函数
 def get_difficulty_weights(difficulty):
     """根据难度获取题目池权重
     
@@ -540,8 +551,139 @@ def calculate_practice_score(guess_count, difficulty):
     
     return final_score
 
+def log_ai_battle_message(game_state, message_type, message_content):
+    """记录AI对战消息到日志文件
+    
+    Args:
+        game_state: 当前游戏状态
+        message_type: 消息类型，可选值：player, system_to_player, ai, system_to_ai
+        message_content: 消息内容
+    """
+    # 获取日志文件路径
+    log_file_path = game_state.get('log_file_path')
+    if not log_file_path:
+        return
+    
+    # 根据消息类型选择前缀
+    prefix = {
+        'player': 'Player: ',
+        'system_to_player': 'System->Player: ',
+        'ai': 'AI: ',
+        'system_to_ai': 'System->AI: '
+    }.get(message_type, '')
+    
+    # 写入日志文件
+    try:
+        with open(log_file_path, 'a', encoding='utf-8') as f:
+            f.write(f"{prefix}{message_content}\n")
+    except Exception as e:
+        # 忽略日志写入错误，不影响游戏正常运行
+        pass
+
+def ai_opponent_thread(game_state, round_num):
+    """AI对手线程函数
+    
+    Args:
+        game_state: 当前游戏状态
+        round_num: 当前轮次编号
+    """
+    try:
+        # 创建独立的AIChat对象，确保不同对局和轮次互不干扰
+        ai_chat = AIChat(
+            model=Config.BATTLE_MODEL,
+            system_prompt=AI_BATTLE_PROMPT
+        )
+
+        log_ai_battle_message(game_state, 'ai', 'AI对手线程已启动')
+        
+        # 循环运行AI对手逻辑，直到AI锁定答案或轮次改变
+        while True:
+            # 检查当前轮次是否已结束
+            current_game_state = session.get(game_state['game_id'])
+            if not current_game_state or current_game_state['round'] != round_num or current_game_state['ai_answer_locked']:
+                log_ai_battle_message(game_state, 'ai', 'AI对手线程已关闭')
+                break
+            
+            # 获取最新的游戏状态
+            game_state = current_game_state
+            
+            # 加载历史对话
+            ai_chat.history.clear()
+            for message in game_state['ai_conversation']:
+                ai_chat.history.append(message)
+            
+            # 生成AI的问题或猜测
+            last_ai_question = ""
+            last_ai_question_answer = ""
+            if len(game_state['ai_conversation']) >= 2:
+                last_ai_question = game_state['ai_conversation'][-2]['content']
+                last_ai_question_answer = game_state['ai_conversation'][-1]['content']
+            
+            if last_ai_question and last_ai_question_answer:
+                ai_prompt = f"对于问题\"{last_ai_question}\"的回答为“{last_ai_question_answer}”。请继续猜测或提问，尝试找出这个化学物质。"
+            else:
+                ai_prompt = "请开始猜测或提问，尝试找出这个化学物质。"
+            
+            ai_guess = ai_chat.request(ai_prompt)
+            
+            # 记录AI的提问
+            log_ai_battle_message(game_state, 'ai', ai_guess)
+            
+            # 调用AI获取回答
+            answer = playerguess(game_state['problem'], ai_guess)
+            
+            # 记录系统对AI的回答
+            log_ai_battle_message(game_state, 'system_to_ai', answer)
+            
+            # 更新游戏状态
+            current_game_state = session.get(game_state['game_id'])
+            if not current_game_state or current_game_state['round'] != round_num:
+                log_ai_battle_message(game_state, 'ai', 'AI对手线程已关闭')
+                break
+            
+            # 更新AI对话历史
+            current_game_state['ai_conversation'].append({
+                'role': 'user',
+                'content': ai_guess
+            })
+            current_game_state['ai_conversation'].append({
+                'role': 'assistant',
+                'content': answer
+            })
+            
+            # 检查是否是直接猜测物质名称
+            is_final_guess = answer in ['CORRECT', 'INCORRECT']
+            
+            # 如果是最终猜测，锁定AI答案
+            if is_final_guess:
+                current_game_state['ai_answer_locked'] = True
+                current_game_state['ai_final_guess'] = ai_guess
+                current_game_state['ai_correct'] = (answer == 'CORRECT')
+            
+            # 更新session中的游戏状态
+            session[current_game_state['game_id']] = current_game_state
+            
+            # 检查AI是否已锁定答案
+            if current_game_state['ai_answer_locked']:
+                log_ai_battle_message(game_state, 'ai', 'AI对手已锁定答案，线程结束')
+                break
+            
+            # 添加延迟，避免过于频繁的请求
+            time.sleep(3)  # AI思考间隔
+            
+    except Exception as e:
+        # 记录错误，不影响主线程
+        print(f"AI对手线程错误: {e}")
+        log_ai_battle_message(game_state, 'ai', f'AI对手线程错误: \n{str(e)}')
+        
+    finally:
+        # 线程结束时的清理工作
+        pass
+
 def trigger_ai_guess(game_state):
     """触发AI进行猜测
+    
+    注意：现在AI对手在独立的线程中运行，此函数仅检查AI是否已锁定答案
     
     Args:
         game_state: 当前游戏状态
@@ -553,60 +695,44 @@ def trigger_ai_guess(game_state):
     if game_state['ai_answer_locked']:
         return game_state
     
-    # 更新AI猜测次数
-    game_state['ai_guess_count'] += 1
-    
-    # 简单AI策略：随机生成问题或猜测
-    ai_actions = [
-        "该物质是否是氧化物？",
-        "该物质是否含有金属元素？",
-        "该物质是否是酸？",
-        "该物质是否是碱？",
-        "该物质是否是盐？",
-        "该物质是否溶于水？",
-        "该物质是否是白色固体？",
-        "氯化钠",
-        "碳酸钠",
-        "硫酸铜",
-        "碳酸钙"
-    ]
-    
-    # 根据难度调整AI行为：难度越高，越可能直接猜测物质名称
-    difficulty_factor = {
-        'beginner': 0.1,
-        'easy': 0.2,
-        'advanced': 0.3,
-        'medium': 0.4,
-        'hard': 0.6
-    }.get(game_state['difficulty'], 0.2)
-    
-    # 决定AI是提问还是直接猜测
-    if random.random() < difficulty_factor or game_state['ai_guess_count'] >= 5:
-        # 直接猜测物质名称
-        ai_guess = random.choice(ai_actions[-4:])
-        answer = playerguess(game_state['problem'], ai_guess)
-        
-        # 锁定AI答案
-        game_state['ai_answer_locked'] = True
-        game_state['ai_final_guess'] = ai_guess
-        game_state['ai_correct'] = (answer == 'CORRECT')
-    else:
-        # 提问
-        ai_guess = random.choice(ai_actions[:-4])
-        answer = playerguess(game_state['problem'], ai_guess)
-        
-        # 更新AI对话历史
-        game_state['ai_conversation'].append({
-            'role': 'user',
-            'content': ai_guess
-        })
-        game_state['ai_conversation'].append({
-            'role': 'assistant',
-            'content': answer
-        })
-    
-    session[game_state['game_id']] = game_state
+    # AI对手现在在独立的线程中运行，这里不再执行AI逻辑
+    # 直接返回当前游戏状态
     return game_state
+
+def lock_player_answer(game_state, guess, is_correct):
+    """锁定玩家答案
+    
+    Args:
+        game_state: 当前游戏状态
+        guess: 玩家的猜测
+        is_correct: 玩家的猜测是否正确
+        
+    Returns:
+        JSON格式的响应，包含锁定结果和当前游戏状态
+    """
+    # 锁定玩家答案
+    game_state['player_answer_locked'] = True
+    game_state['player_final_guess'] = guess
+    game_state['player_correct'] = is_correct
+    session[game_state['game_id']] = game_state
+    
+    # 触发AI进行猜测
+    ai_response = trigger_ai_guess(game_state)
+    
+    # 如果AI也已锁定答案，结算本轮
+    if ai_response['ai_answer_locked']:
+        return settle_round(game_state)
+    
+    # 返回当前状态
+    return jsonify({
+        'status': 'success',
+        'message': '答案已锁定',
+        'player_answer_locked': True,
+        'ai_answer_locked': game_state['ai_answer_locked'],
+        'round': game_state['round'],
+        'player_hp': game_state['player_hp'],
+        'ai_hp': game_state['ai_hp']
+    })
 
 def settle_round(game_state):
     """结算本轮游戏
@@ -624,25 +750,44 @@ def settle_round(game_state):
         JSON格式的响应，包含结算结果和当前游戏状态
     """
     try:
-        # 计算伤害
-        battle_damage_base = 100  # 从.env获取，暂时硬编码
-        battle_damage_scale = 0.25  # 从.env获取，暂时硬编码
+        # 从Config加载配置
+        battle_damage_base = float(Config.BATTLE_DAMAGE_BASE)
+        battle_damage_scale = float(Config.BATTLE_DAMAGE_SCALE_INCREASEMENT)
+        battle_punishment_damage = float(Config.BATTLE_PUNISHMENT_DAMAGE)
         round_num = game_state['round']
         
         player_damage = 0
         ai_damage = 0
         
-        # 玩家对AI造成的伤害
-        if game_state['player_correct']:
-            player_damage = (battle_damage_scale * (round_num - 1) + 1) * battle_damage_base / (game_state['player_guess_count'] or 1)
-            ai_damage_dealt = max(0, min(100, player_damage))
-            game_state['ai_hp'] = max(0, game_state['ai_hp'] - ai_damage_dealt)
+        # 获取双方的猜测次数
+        player_q = game_state['player_guess_count'] or 1
+        ai_q = game_state['ai_guess_count'] or 1
         
-        # AI对玩家造成的伤害
-        if game_state['ai_correct']:
-            ai_damage = (battle_damage_scale * (round_num - 1) + 1) * battle_damage_base / (game_state['ai_guess_count'] or 1)
-            player_damage_dealt = max(0, min(100, ai_damage))
-            game_state['player_hp'] = max(0, game_state['player_hp'] - player_damage_dealt)
+        # 计算伤害倍率
+        damage_multiplier = battle_damage_scale * (round_num - 1) + 1
+        
+        # 计算伤害
+        if game_state['player_correct'] and game_state['ai_correct']:
+            # 两名玩家都胜利，相互造成伤害
+            player_damage = damage_multiplier * battle_damage_base / player_q
+            ai_damage = damage_multiplier * battle_damage_base / ai_q
+        elif game_state['player_correct'] and not game_state['ai_correct']:
+            # 只有玩家胜利，玩家对AI造成伤害
+            player_damage = damage_multiplier * battle_damage_base / player_q
+        elif not game_state['player_correct'] and game_state['ai_correct']:
+            # 只有AI胜利，AI对玩家造成伤害
+            ai_damage = damage_multiplier * battle_damage_base / ai_q
+        else:
+            # 两名玩家都失败，均受到惩罚伤害
+            player_damage = damage_multiplier * battle_punishment_damage
+            ai_damage = damage_multiplier * battle_punishment_damage
+        
+        # 应用伤害
+        ai_damage_dealt = max(0, min(100, player_damage))
+        player_damage_dealt = max(0, min(100, ai_damage))
+        
+        game_state['ai_hp'] = max(0, game_state['ai_hp'] - ai_damage_dealt)
+        game_state['player_hp'] = max(0, game_state['player_hp'] - player_damage_dealt)
         
         # 检查游戏是否结束
         game_ended = game_state['player_hp'] <= 0 or game_state['ai_hp'] <= 0
@@ -658,8 +803,6 @@ def settle_round(game_state):
                 result = 'lose'
             else:
                 result = 'draw'
-            
-
         else:
             # 进入下一轮
             game_state['round'] += 1
@@ -671,11 +814,24 @@ def settle_round(game_state):
             game_state['ai_final_guess'] = ''
             game_state['player_correct'] = False
             game_state['ai_correct'] = False
+            game_state['ai_conversation'] = []  # 清空AI对话历史
             game_state['round_start_time'] = datetime.now().isoformat()
             
             # 随机选择新题目
             weights = get_difficulty_weights(game_state['difficulty'])
             game_state['problem'] = weighted_randproblem(weights)
+            
+            # 保存游戏状态到session
+            session[game_state['game_id']] = game_state
+            
+            # 启动AI对手线程，使用最新的游戏状态和轮次
+            ai_thread = threading.Thread(
+                target=ai_opponent_thread,
+                args=(game_state.copy(), game_state['round']),
+                daemon=True
+            )
+            ai_thread.start()
+            # game_state['ai_thread'] = ai_thread
         
         session[game_state['game_id']] = game_state
         
@@ -691,9 +847,10 @@ def settle_round(game_state):
             'ai_correct': game_state['ai_correct'],
             'player_final_guess': game_state['player_final_guess'],
             'ai_final_guess': game_state['ai_final_guess'],
-            'player_damage_dealt': ai_damage,
-            'ai_damage_dealt': player_damage,
-            'game_ended': game_ended
+            'player_damage_dealt': player_damage_dealt,
+            'ai_damage_dealt': ai_damage_dealt,
+            'game_ended': game_ended,
+            'correct_substance': game_state['problem']  # 添加正确物质到响应中
         }
         
         if game_ended:

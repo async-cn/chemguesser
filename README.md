@@ -41,17 +41,11 @@ BATTLE_MODEL=deepseek-reasoner
 BATTLE_CONFIRM_TIME_LIMIT=45
 BATTLE_DAMAGE_BASE=200
 BATTLE_DAMAGE_SCALE_INCREASEMENT=0.25
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=your_mysql_pw
-MYSQL_DB=chemguesser
 WEBSITE_ADDR=localhost
 WEBSITE_PORT=2300
-FLASK_ENV=development
+FLASK_ENV=production
+SQLALCHEMY_DATABASE_URI=sqlite:///chemguesser.db
 ```
-
-其中MySQL部分暂无实际用途，用户数据目前通过SQLite存储。
 
 配置完成后，将 .env.example 文件 **重命名为为 .env** 。
 

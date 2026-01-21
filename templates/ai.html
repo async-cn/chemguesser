@@ -186,6 +186,84 @@
         </div>
     </div>
 
+    <!-- 轮结束模态框 -->
+    <div class="modal fade" id="aiRoundEndModal" tabindex="-1" aria-labelledby="aiRoundEndModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-primary">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="aiRoundEndModalLabel">第 <span id="roundModalNumber">1</span> 轮结束</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-5">
+                    <div class="mb-4">
+                        <h6 class="text-muted">正确物质</h6>
+                        <p id="roundModalCorrectSubstance" class="display-6 text-primary mb-0"></p>
+                    </div>
+                    
+                    <div class="row g-3 justify-content-center mb-4">
+                        <div class="col-6">
+                            <div class="card bg-light border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-muted">您的猜测</h6>
+                                    <p id="roundModalPlayerGuess" class="display-6 text-primary mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-muted">AI的猜测</h6>
+                                    <p id="roundModalAIGuess" class="display-6 text-primary mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 justify-content-center mb-4">
+                        <div class="col-6">
+                            <div class="card bg-light border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-muted">您的血量变化</h6>
+                                    <p id="roundModalPlayerHpChange" class="display-6 text-danger mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-muted">AI的血量变化</h6>
+                                    <p id="roundModalAIHpChange" class="display-6 text-danger mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-6">
+                            <div class="card bg-light border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-muted">您的当前血量</h6>
+                                    <p id="roundModalPlayerCurrentHp" class="display-6 text-primary mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-muted">AI的当前血量</h6>
+                                    <p id="roundModalAICurrentHp" class="display-6 text-primary mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-top-0 p-4">
+                    <button type="button" class="btn btn-primary btn-lg" data-bs-dismiss="modal">继续</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 游戏状态
         let aiGameState = {
@@ -198,7 +276,8 @@
             aiGuessCount: 0,
             playerAnswerLocked: false,
             aiAnswerLocked: false,
-            timer: null
+            timer: null,
+            gameId: '' // 游戏ID
         };
 
         // 初始化
@@ -266,10 +345,47 @@
             // 聚焦输入框
             document.getElementById('aiQuestionInput').focus();
 
-            // 启动AI思考
-            setTimeout(() => {
-                simulateAIThinking();
-            }, 2000);
+            // 发送开始游戏请求到后端
+            fetch('/ai/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ difficulty: difficulty })
+            })
+            .then(response => {
+                console.log('AI游戏开始请求响应状态:', response.status);
+                return response.text().then(rawContent => {
+                    console.log('AI游戏开始请求原始响应:', rawContent);
+                    
+                    if (!response.ok) {
+                        // 直接抛出原始内容作为错误
+                        throw new Error(`HTTP ${response.status}: ${rawContent}`);
+                    }
+                    
+                    // 尝试解析JSON
+                    try {
+                        return JSON.parse(rawContent);
+                    } catch (parseError) {
+                        console.error('JSON解析失败:', parseError);
+                        throw new Error(`JSON解析失败: ${rawContent}`);
+                    }
+                });
+            })
+            .then(data => {
+                if (data.status === 'error') {
+                    console.error('游戏开始失败:', JSON.stringify(data, null, 2));
+                    showAIError(data.message);
+                } else {
+                    // 保存游戏ID
+                    aiGameState.gameId = data.game_id;
+                    console.log('游戏已开始，ID:', aiGameState.gameId);
+                }
+            })
+            .catch(error => {
+                console.error('游戏开始请求失败:', error);
+                showAIError('游戏开始失败，请稍后重试');
+            });
         }
 
         // 退出AI游戏
@@ -299,20 +415,103 @@
             // 清空输入框
             questionInput.value = '';
 
-            // 模拟AI回答
-            setTimeout(() => {
-                // 随机生成回答
-                const answers = ['YES', 'NO', 'CANNOT ANSWER'];
-                const answer = answers[Math.floor(Math.random() * answers.length)];
-                addAIMessage('ai', answer);
-            }, 1000);
+            // 禁用输入
+            questionInput.disabled = true;
+            document.getElementById('aiSubmitBtn').disabled = true;
+            document.getElementById('aiLockBtn').disabled = true;
+
+            // 添加AI思考中的提示
+            const thinkingElement = addAIMessage('system', 'AI正在思考...');
+
+            // 发送请求到后端
+            fetch('/ai/guess', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    game_id: aiGameState.gameId,
+                    question: question 
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        console.error('AI猜测请求失败 (HTTP ' + response.status + '):', JSON.stringify(errorData, null, 2));
+                        throw new Error(errorData.message || 'AI猜测请求失败');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 输出原始响应内容到控制台日志
+                console.log('AI对战响应:', data);
+                
+                // 移除思考中的提示
+                if (thinkingElement) {
+                    thinkingElement.remove();
+                }
+
+                // 检查是否是结算结果
+                if (data.player_damage_dealt !== undefined || data.ai_damage_dealt !== undefined) {
+                    // 直接处理结算结果
+                    endAIRound(data);
+                } else {
+                    // 添加AI回答
+                    addAIMessage('system', data.answer);
+
+                    // 更新游戏状态
+                    aiGameState.playerAnswerLocked = data.player_answer_locked;
+                    aiGameState.aiAnswerLocked = data.ai_answer_locked;
+                    aiGameState.playerHp = data.player_hp;
+                    aiGameState.aiHp = data.ai_hp;
+
+                    // 更新UI
+                    document.getElementById('aiPlayerHp').textContent = aiGameState.playerHp;
+                    document.getElementById('aiPlayerHpBar').style.width = `${aiGameState.playerHp}%`;
+                    document.getElementById('aiOpponentHp').textContent = aiGameState.aiHp;
+                    document.getElementById('aiOpponentHpBar').style.width = `${aiGameState.aiHp}%`;
+
+                    // 如果玩家锁定答案，更新状态
+                    if (aiGameState.playerAnswerLocked) {
+                        document.getElementById('aiPlayerStatus').innerHTML = '<span class="badge bg-warning">答案已锁定</span>';
+                        document.getElementById('aiSubmitBtn').disabled = true;
+                        document.getElementById('aiLockBtn').disabled = true;
+                    } else {
+                        // 重新启用输入
+                        questionInput.disabled = false;
+                        document.getElementById('aiSubmitBtn').disabled = false;
+                        document.getElementById('aiLockBtn').disabled = false;
+                    }
+
+                    // 如果AI也已锁定答案，结算本轮
+                    if (data.ai_answer_locked) {
+                        document.getElementById('aiOpponentStatus').innerHTML = '<span class="badge bg-warning">答案已锁定</span>';
+                        // 结算本轮
+                        setTimeout(() => {
+                            endAIRound(data);
+                        }, 1000);
+                    }
+                }
+            })
+            .catch(error => {
+                // 移除思考中的提示
+                if (thinkingElement) {
+                    thinkingElement.remove();
+                }
+                console.error('AI猜测请求失败:', JSON.stringify(error, null, 2));
+                showAIError('AI猜测请求失败，请稍后重试');
+                
+                // 重新启用输入
+                questionInput.disabled = false;
+                document.getElementById('aiSubmitBtn').disabled = false;
+                document.getElementById('aiLockBtn').disabled = false;
+            });
         }
 
         // 锁定AI答案
         function lockAIAnswer() {
             if (!aiGameState.isPlaying || aiGameState.playerAnswerLocked) return;
-
-            aiGameState.playerAnswerLocked = true;
 
             // 更新状态
             document.getElementById('aiPlayerStatus').innerHTML = '<span class="badge bg-warning">答案已锁定</span>';
@@ -325,16 +524,58 @@
             // 启动倒计时
             startAITimer();
 
-            // 模拟AI锁定答案
-            setTimeout(() => {
-                aiGameState.aiAnswerLocked = true;
-                document.getElementById('aiOpponentStatus').innerHTML = '<span class="badge bg-warning">答案已锁定</span>';
-                addAIMessage('system', 'AI已锁定答案，正在结算...');
-                // 结算本轮
-                setTimeout(() => {
-                    endAIRound();
-                }, 2000);
-            }, 3000);
+            // 发送请求到后端
+            fetch('/ai/lock_answer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    game_id: aiGameState.gameId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        console.error('锁定答案请求失败 (HTTP ' + response.status + '):', JSON.stringify(errorData, null, 2));
+                        throw new Error(errorData.message || '锁定答案请求失败');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 输出原始响应内容到控制台日志
+                console.log('AI对战锁定答案响应:', data);
+                
+                if (data.status === 'error') {
+                    console.error('锁定答案失败:', JSON.stringify(data, null, 2));
+                    showAIError(data.message);
+                } else {
+                    // 更新游戏状态
+                    aiGameState.playerAnswerLocked = data.player_answer_locked;
+                    aiGameState.aiAnswerLocked = data.ai_answer_locked;
+                    aiGameState.playerHp = data.player_hp;
+                    aiGameState.aiHp = data.ai_hp;
+
+                    // 更新UI
+                    document.getElementById('aiOpponentHp').textContent = aiGameState.aiHp;
+                    document.getElementById('aiOpponentHpBar').style.width = `${aiGameState.aiHp}%`;
+                    document.getElementById('aiOpponentStatus').innerHTML = '<span class="badge bg-warning">答案已锁定</span>';
+                    addAIMessage('system', 'AI已锁定答案，正在结算...');
+
+                    // 如果AI也已锁定答案，结算本轮
+                    if (data.ai_answer_locked) {
+                        // 结算本轮
+                        setTimeout(() => {
+                            endAIRound(data);
+                        }, 1000);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('锁定答案请求失败:', JSON.stringify(error, null, 2));
+                showAIError('锁定答案失败，请稍后重试');
+            });
         }
 
         // 启动AI倒计时
@@ -402,35 +643,72 @@
         }
 
         // 结束AI回合
-        function endAIRound() {
+        function endAIRound(roundResult) {
             // 清除倒计时
             if (aiGameState.timer) {
                 clearInterval(aiGameState.timer);
                 aiGameState.timer = null;
             }
 
-            // 重置锁定状态
-            aiGameState.playerAnswerLocked = false;
-            aiGameState.aiAnswerLocked = false;
-
-            // 更新状态
-            document.getElementById('aiPlayerStatus').innerHTML = '<span class="badge bg-success">准备就绪</span>';
-            document.getElementById('aiOpponentStatus').innerHTML = '<span class="badge bg-info">思考中...</span>';
-            document.getElementById('aiSubmitBtn').disabled = false;
-            document.getElementById('aiLockBtn').disabled = false;
-            document.getElementById('aiTimer').textContent = '-';
-
-            // 模拟伤害计算
-            const baseDamage = 100; // 从.env获取
-            const damageScale = 0.25; // 从.env获取
-            const playerDamage = Math.floor((damageScale * (aiGameState.round - 1) + 1) * baseDamage / (aiGameState.playerGuessCount || 1));
-            const aiDamage = Math.floor((damageScale * (aiGameState.round - 1) + 1) * baseDamage / (aiGameState.aiGuessCount || 1));
-
-            // 更新血量
-            aiGameState.playerHp = Math.max(0, aiGameState.playerHp - aiDamage);
-            aiGameState.aiHp = Math.max(0, aiGameState.aiHp - playerDamage);
+            // 检查roundResult是否存在，如果不存在则获取结算结果
+            if (!roundResult || typeof roundResult !== 'object') {
+                // 添加加载提示
+                const loadingMessage = addAIMessage('system', '正在获取本轮结算结果...');
+                
+                // 发送请求到后端获取结算结果
+                fetch('/ai/lock_answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        game_id: aiGameState.gameId
+                    })
+                })
+                .then(response => {
+                    console.log('获取结算结果响应状态:', response.status);
+                    return response.text().then(rawContent => {
+                        console.log('获取结算结果原始响应:', rawContent);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${rawContent}`);
+                        }
+                        
+                        try {
+                            return JSON.parse(rawContent);
+                        } catch (parseError) {
+                            console.error('JSON解析失败:', parseError);
+                            throw new Error(`JSON解析失败: ${rawContent}`);
+                        }
+                    });
+                })
+                .then(data => {
+                    // 移除加载提示
+                    if (loadingMessage) {
+                        loadingMessage.remove();
+                    }
+                    
+                    // 使用获取到的结算结果重新调用endAIRound函数
+                    endAIRound(data);
+                })
+                .catch(error => {
+                    // 移除加载提示
+                    if (loadingMessage) {
+                        loadingMessage.remove();
+                    }
+                    
+                    console.error('获取结算结果失败:', error);
+                    showAIError('获取结算结果失败，请刷新页面重试');
+                });
+                
+                // 结束当前函数执行
+                return;
+            }
 
             // 更新UI
+            aiGameState.playerHp = roundResult.player_hp || aiGameState.playerHp;
+            aiGameState.aiHp = roundResult.ai_hp || aiGameState.aiHp;
+            
             document.getElementById('aiPlayerHp').textContent = aiGameState.playerHp;
             document.getElementById('aiPlayerHpBar').style.width = `${aiGameState.playerHp}%`;
             document.getElementById('aiOpponentHp').textContent = aiGameState.aiHp;
@@ -438,24 +716,54 @@
 
             // 添加到对话历史
             addAIMessage('system', `第 ${aiGameState.round} 轮结束！`);
-            addAIMessage('system', `您受到 ${aiDamage} 点伤害，剩余血量: ${aiGameState.playerHp}`);
-            addAIMessage('system', `AI受到 ${playerDamage} 点伤害，剩余血量: ${aiGameState.aiHp}`);
+            addAIMessage('system', `您受到 ${roundResult.player_damage_dealt || 0} 点伤害，剩余血量: ${aiGameState.playerHp}`);
+            addAIMessage('system', `AI受到 ${roundResult.ai_damage_dealt || 0} 点伤害，剩余血量: ${aiGameState.aiHp}`);
+
+            // 显示轮结束弹窗
+            showRoundEndModal(roundResult);
 
             // 检查游戏是否结束
-            if (aiGameState.playerHp <= 0 || aiGameState.aiHp <= 0) {
-                endAIGame();
+            if (roundResult.game_ended) {
+                setTimeout(() => {
+                    endAIGame();
+                }, 1000);
             } else {
+                // 重置锁定状态
+                aiGameState.playerAnswerLocked = false;
+                aiGameState.aiAnswerLocked = false;
+
+                // 更新状态
+                document.getElementById('aiPlayerStatus').innerHTML = '<span class="badge bg-success">准备就绪</span>';
+                document.getElementById('aiOpponentStatus').innerHTML = '<span class="badge bg-info">思考中...</span>';
+                document.getElementById('aiSubmitBtn').disabled = false;
+                document.getElementById('aiLockBtn').disabled = false;
+                document.getElementById('aiTimer').textContent = '-';
+                document.getElementById('aiQuestionInput').disabled = false;
+
                 // 进入下一轮
-                aiGameState.round++;
+                aiGameState.round = roundResult.round || aiGameState.round + 1;
                 document.getElementById('aiRound').textContent = aiGameState.round;
                 aiGameState.playerGuessCount = 0;
                 aiGameState.aiGuessCount = 0;
                 addAIMessage('system', `第 ${aiGameState.round} 轮开始！`);
-                // 启动AI思考
-                setTimeout(() => {
-                    simulateAIThinking();
-                }, 2000);
             }
+        }
+
+        // 显示轮结束弹窗
+        function showRoundEndModal(roundResult) {
+            // 更新弹窗内容
+            document.getElementById('roundModalNumber').textContent = aiGameState.round;
+            document.getElementById('roundModalCorrectSubstance').textContent = roundResult.correct_substance;
+            document.getElementById('roundModalPlayerGuess').textContent = roundResult.player_final_guess || '无';
+            document.getElementById('roundModalAIGuess').textContent = roundResult.ai_final_guess || '无';
+            document.getElementById('roundModalPlayerHpChange').textContent = '-' + roundResult.player_damage_dealt;
+            document.getElementById('roundModalAIHpChange').textContent = '-' + roundResult.ai_damage_dealt;
+            document.getElementById('roundModalPlayerCurrentHp').textContent = aiGameState.playerHp;
+            document.getElementById('roundModalAICurrentHp').textContent = aiGameState.aiHp;
+
+            // 显示弹窗
+            const modal = new bootstrap.Modal(document.getElementById('aiRoundEndModal'));
+            modal.show();
         }
 
         // 结束AI游戏
@@ -502,6 +810,11 @@
             document.getElementById('aiGameDuration').textContent = '5分钟'; // 模拟时长
         }
 
+        // 显示AI错误信息
+        function showAIError(message) {
+            addAIMessage('system', '错误：' + message);
+        }
+
         // 添加消息到AI对话历史
         function addAIMessage(sender, content) {
             const conversationHistory = document.getElementById('aiConversation');
@@ -542,6 +855,9 @@
             
             // 滚动到底部
             conversationHistory.scrollTop = conversationHistory.scrollHeight;
+            
+            // 返回创建的元素
+            return messageDiv;
         }
     </script>
 {% endblock %}
