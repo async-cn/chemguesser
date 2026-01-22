@@ -21,7 +21,7 @@
 <!--            <hr class="my-4">-->
 <!--            <h4 style="margin: 12px 0">选择游戏模式</h4>-->
             <div class="d-flex gap-3">
-                <a class="btn btn-primary btn-lg" href="{{ url_for('games.practice') }}" role="button">练习模式</a>
+                <a class="btn btn-primary btn-lg" href="{{ url_for('games.practice') }}" role="button">单人练习</a>
                 <a class="btn btn-success btn-lg" href="javascript:block();" role="button">玩家对战</a>
                 <a class="btn btn-warning btn-lg" href="javascript:block();" role="button">AI对战</a>
             </div>
@@ -31,7 +31,7 @@
             <div class="col-md-4 h-100">
                 <div class="card h-100 d-flex flex-column">
                     <div class="card-body flex-grow-1 d-flex flex-column">
-                        <h5 class="card-title">练习模式</h5>
+                        <h5 class="card-title">单人练习</h5>
                         <p class="card-text">单人练习，无限次猜测。</p>
                         <div class="mt-auto">
                             <a href="{{ url_for('games.practice') }}" class="btn btn-primary">开始练习</a>

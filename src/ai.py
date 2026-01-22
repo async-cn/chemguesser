@@ -1,10 +1,16 @@
-from .config import Config
 from openai import OpenAI
+from .config import Config
+import json
 
 with open("config/prompt.md", mode="r", encoding="utf-8") as f:
     PROMPT = f.read()
 if not PROMPT:
     raise Exception("Empty prompt provided")
+
+with open("config/elements.json", mode="r", encoding="utf-8") as f:
+    ELEMENTS = json.load(f)
+if not ELEMENTS:
+    ELEMENTS = {}
 
 if not Config.APIKEY:
     raise ValueError("API Key not found")
@@ -59,4 +65,55 @@ def playerguess(problem:str, usermsg:str) -> str:
     :param usermsg: 用户询问
     :return: AI回答
     """
-    return request(PROMPT.replace("<problem>", problem), usermsg)
+    sysprompt = PROMPT.replace("[problem]", problem)
+
+    elements_involved = False
+    elements = []
+    add_notices = False
+    available_notices = {
+        "akm": {
+            'involved': False,
+            'notice': "- 主族序数为1的金属元素是碱金属元素（氢元素除外）。"
+        },
+        "akem": {
+            'involved': False,
+            'notice': "- 主族序数为2的元素是碱土金属元素。"
+        },
+        "halogen": {
+            'involved': False,
+            'notice': '- 主族序数为7的元素是卤素（卤族元素）。'
+        }
+    }
+    notices = []
+
+    for char in problem:
+        if char in ELEMENTS:
+            if not elements_involved:
+                elements_involved = True
+                elements.append("参考元素信息: \n")
+            e = ELEMENTS[char]
+            line = f"- {char}: 原子序数：{e['index']}；相对原子质量：{e['molarmass']}；所在周期：{e['period']}；"
+            if e['maingroup'] > 0:
+                line += f"主族序数：{e['maingroup']}；"
+                line += "是短周期主族元素；" if e['is_spmg'] else "不是短周期主族元素；"
+                if e['maingroup'] in [1, 2, 7]:
+                    add_notices = True
+                    if e['maingroup'] == 1:
+                        available_notices['akm']['involved'] = True
+                    elif e['maingroup'] == 2:
+                        available_notices['akem']['involved'] = True
+                    elif e['maingroup'] == 7:
+                        available_notices['halogen']['involved'] = True
+            elements.append(line)
+
+    sysprompt = sysprompt.replace("[elements]", '\n'.join(elements))
+
+    if add_notices:
+        notices.append("注意事项: \n")
+        for value in available_notices.values():
+            if value['involved']:
+                notices.append(value['notice'])
+
+    sysprompt = sysprompt.replace("[notice]", '\n'.join(notices) if add_notices else "")
+
+    return request(sysprompt, usermsg)
