@@ -7,7 +7,7 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white border-bottom-0 p-4">
                         <h2 class="text-center text-primary">注册账户</h2>
-                        <p class="text-center text-muted mt-2">创建您的ChemGuesser账户，开始化学猜盐之旅</p>
+                        <p class="text-center text-muted mt-2">创建你的ChemGuesser账户</p>
                     </div>
                     <div class="card-body p-4">
                         <form method="POST" action="">
@@ -165,22 +165,56 @@
             
             // 禁用按钮并显示倒计时
             button.disabled = true;
-            button.textContent = '60秒后重新发送';
+            button.textContent = '发送中...';
             
-            let countdown = 60;
-            const timer = setInterval(() => {
-                countdown--;
-                button.textContent = `${countdown}秒后重新发送`;
-                
-                if (countdown <= 0) {
-                    clearInterval(timer);
+            // 发送API请求
+            fetch('/send-email-code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => {
+                console.log(response);
+                return response.json().then(data => {
+                    return { status: response.status, data: data };
+                });
+            })
+            .then(({ status, data }) => {
+                if (status === 200) {
+                    // 请求成功，显示倒计时
+                    let countdown = 60;
+                    button.textContent = `${countdown}秒后重新发送`;
+                    
+                    const timer = setInterval(() => {
+                        countdown--;
+                        button.textContent = `${countdown}秒后重新发送`;
+                        
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            button.disabled = false;
+                            button.textContent = '发送验证码';
+                        }
+                    }, 1000);
+                    
+                    // alert('验证码已发送，请注意查收');
+                } else {
+                    // 请求失败，恢复按钮状态
                     button.disabled = false;
                     button.textContent = '发送验证码';
+                    
+                    // 显示错误信息
+                    alert(data.message || '发送失败，请稍后重试');
                 }
-            }, 1000);
-            
-            // 这里可以添加发送验证码的AJAX请求
-            console.log('发送验证码到邮箱:', email);
+            })
+            .catch(error => {
+                // 网络错误，恢复按钮状态
+                button.disabled = false;
+                button.textContent = '发送验证码';
+                
+                alert('网络错误，请稍后重试');
+            });
         });
     </script>
 {% endblock %}

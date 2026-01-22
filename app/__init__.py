@@ -43,10 +43,12 @@ def create_app(config_class=Config):
     from app.main.routes import main
     from app.users.routes import users
     from app.games.routes import games
+    from app.api.routes import api
     
     app.register_blueprint(main)
     app.register_blueprint(users)
     app.register_blueprint(games)
+    app.register_blueprint(api)
 
     return app
 

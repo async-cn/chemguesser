@@ -19,6 +19,10 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField('Register')
     
     def validate_username(self, username):
+        # 检查用户名合法性：不包含空格、斜杠“/”、反斜杠“\”和井号“#”
+        if any(char in username.data for char in [' ', '/', '\\', '#']):
+            raise ValidationError('Username cannot contain spaces, slashes (/, \\), or #.')
+        # 检查用户名是否已存在
         user = User.query.filter_by(username=username.data).first()
         if user:
             raise ValidationError('That username is taken. Please choose a different one.')

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from app import db, login_manager
 from flask_login import UserMixin
 
@@ -15,6 +15,17 @@ class User(db.Model, UserMixin):
     
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.elo_score}')"
+
+class VerificationCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), nullable=False)
+    code = db.Column(db.String(6), nullable=False)
+    ip = db.Column(db.String(45), nullable=False)  # 支持IPv6
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.utcnow() + timedelta(minutes=15))
+    
+    def __repr__(self):
+        return f"VerificationCode('{self.email}', '{self.code}', '{self.expires_at}')"
 
 @login_manager.user_loader
 def load_user(user_id):
