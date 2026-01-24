@@ -81,14 +81,23 @@
                                 <input type="text" id="questionInput" class="form-control border-primary" placeholder="输入您的问题或直接猜测物质名称..." aria-label="输入您的问题或直接猜测物质名称...">
                                 <button class="btn btn-primary" type="button" id="submitBtn">发送</button>
                             </div>
+                            <br/>
                             <div class="text-sm text-muted mt-2">
+                                <ul class="list-unstyled d-flex flex-wrap gap-2" id="common-questions">
+                                    <li class="bg-light px-2 py-1 rounded" id="cq-placeholder">暂无常用提问</li>
+                                </ul>
+                                <ul class="list-unstyled d-flex flex-wrap gap-2">
+                                    <li class="bg-light px-2 py-1 rounded pointer" id="add-common-question">+ 新增常用提问</li>
+                                    <li class="bg-light px-2 py-1 rounded pointer" id="remove-common-question">- 移除常用提问</li>
+                                </ul>
+                                <p><a href="/docs/about_common_questions">关于常用提问</a></p>
                                 <p>所有答案物质均为无机纯净物。</p>
                                 <p>可以点右上角“退出”投降哦~ <s>将军请走此小道</s></p>
                                 <p>提问示例：</p>
-                                <ul class="list-unstyled d-flex flex-wrap gap-2">
-                                    <li class="bg-light px-2 py-1 rounded">是盐类吗？</li>
-                                    <li class="bg-light px-2 py-1 rounded">是否含有金属元素？</li>
-                                    <li class="bg-light px-2 py-1 rounded">氯化钠</li>
+                                <ul>
+                                    <li>是盐类吗？</li>
+                                    <li>是否含有金属元素？</li>
+                                    <li>氯化钠</li>
                                 </ul>
                                 <p>值得注意的是，AI对第五周期及以上元素（仅在hard题库涉及，钡、银、汞除外）性质的判断错误率较高，建议尽量避免询问关于其周期或族的问题。</p>
                                 <p>提示：严谨的表述有助于得到精确的答案。</p>
@@ -138,266 +147,51 @@
         </div>
     </div>
 
-    <script>
-        // 游戏状态
-        let gameState = {
-            isPlaying: false,
-            difficulty: '',
-            guessCount: 0,
-            conversation: [],
-            gameId: ''
-        };
-
-        // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 绑定事件
-            document.getElementById('startGameBtn').addEventListener('click', startGame);
-            document.getElementById('newGameBtn').addEventListener('click', startGame);
-            document.getElementById('quitBtn').addEventListener('click', quitGame);
-            document.getElementById('submitBtn').addEventListener('click', submitQuestion);
-            document.getElementById('questionInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    submitQuestion();
-                }
-            });
-            document.getElementById('playAgainBtn').addEventListener('click', function() {
-                window.location.reload();
-                return;
-                const modal = new bootstrap.Modal(document.getElementById('gameEndModal'));
-                modal.hide();
-                startGame();
-            });
-        });
-
-        // 开始游戏
-        function startGame() {
-            // 获取难度选择
-            const difficultySelect = document.getElementById('difficulty');
-            const difficulty = difficultySelect.value;
-            gameState.difficulty = difficulty;
-            gameState.guessCount = 0;
-            gameState.conversation = [];
-            gameState.isPlaying = true;
-
-            // 更新界面
-            document.getElementById('gameStatus').style.display = 'block';
-            document.getElementById('inputArea').style.display = 'block';
-            document.getElementById('gameDifficulty').textContent = difficultySelect.options[difficultySelect.selectedIndex].value;
-            document.getElementById('guessCount').textContent = '0';
-            document.getElementById('gameState').textContent = '进行中';
-            document.getElementById('questionInput').disabled = false;
-            document.getElementById('submitBtn').disabled = false;
-
-            // 清空对话历史
-            const conversationHistory = document.getElementById('conversationHistory');
-            conversationHistory.innerHTML = `
-                <div class="text-center text-muted py-5">
-                    <i class="bi bi-lightbulb display-4 mb-3"></i>
-                    <p>游戏开始！请输入您的问题或直接猜测物质名称</p>
+    <!-- Bootstrap Modals -->
+    <!-- 添加常用提问 -->
+    <div class="modal fade" id="addCQModal" tabindex="-1" aria-labelledby="addCQModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCQModalLabel">添加常用提问</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            `;
+                <div class="modal-body">
+                    <input type="text" class="form-control" id="addCQInput" placeholder="提问内容">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="addCQConfirm">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // 聚焦输入框
-            document.getElementById('questionInput').focus();
+    <!-- Bootstrap Toasts -->
+    <!-- 添加常用提问-成功 -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="cqAddedToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-body">
+                已添加常用提问
+            </div>
+        </div>
+    </div>
+    <!-- 删除常用提问-成功 -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="cqRemovedToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-body">
+                已移除常用提问
+            </div>
+        </div>
+    </div>
+    <!-- 删除常用提问-提示 -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="cqRemovePromptToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-body">
+                按住Alt并左键指定常用提问即可将其移除
+            </div>
+        </div>
+    </div>
 
-            // 发送开始游戏请求到后端
-            fetch('/practice/start', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ difficulty: difficulty })
-            })
-            .then(response => {
-                console.log("Starting request sent");
-                console.log(response);
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'error') {
-                    console.log("An error occured while game is starting");
-                    showError(data.message);
-                } else {
-                    // 保存游戏ID
-                    gameState.gameId = data.game_id;
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                showError('游戏开始失败，请稍后重试');
-            });
-        }
-
-        // 提交问题/猜测
-        function submitQuestion() {
-            if (!gameState.isPlaying) return;
-
-            const questionInput = document.getElementById('questionInput');
-            const question = questionInput.value.trim();
-
-            if (!question) {
-                return;
-            }
-
-            // 更新猜测次数
-            gameState.guessCount++;
-            document.getElementById('guessCount').textContent = gameState.guessCount;
-
-            // 添加到对话历史
-            addMessageToHistory('user', question);
-
-            // 清空输入框
-            questionInput.value = '';
-
-            // 禁用输入
-            questionInput.disabled = true;
-            document.getElementById('submitBtn').disabled = true;
-
-            // 添加AI思考中的提示
-            const thinkingElement = addMessageToHistory('ai', '思考中...', true);
-
-            // 发送请求到后端
-            fetch('/practice/guess', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    game_id: gameState.gameId,
-                    question: question 
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                // 移除思考中的提示
-                thinkingElement.remove();
-
-                // 添加AI回答
-                addMessageToHistory('ai', data.answer);
-
-                // 检查游戏是否结束
-                if (data.answer === 'CORRECT') {
-                    endGame(true, data.correct_substance);
-                }
-
-                // 重新启用输入
-                questionInput.disabled = false;
-                document.getElementById('submitBtn').disabled = false;
-                questionInput.focus();
-            })
-            .catch(error => {
-                // 移除思考中的提示
-                thinkingElement.remove();
-                addMessageToHistory('ai', '抱歉，出现了错误，请稍后重试');
-                
-                // 重新启用输入
-                questionInput.disabled = false;
-                document.getElementById('submitBtn').disabled = false;
-                questionInput.focus();
-            });
-        }
-
-        // 添加消息到对话历史
-        function addMessageToHistory(sender, content, isThinking = false) {
-            const conversationHistory = document.getElementById('conversationHistory');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `p-3 mb-2 ${sender === 'user' ? 'bg-primary bg-opacity-10' : 'bg-light'} rounded`;
-            
-            const messageContent = document.createElement('div');
-            messageContent.className = `d-flex ${sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`;
-            
-            const messageBubble = document.createElement('div');
-            messageBubble.className = `max-w-75 p-3 rounded ${sender === 'user' ? 'bg-primary text-white' : 'bg-white border border-primary text-dark'}`;
-            
-            if (isThinking) {
-                messageBubble.innerHTML = `<span class="text-muted"><i class="bi bi-hourglass-split me-2"></i>${content}</span>`;
-            } else {
-                messageBubble.textContent = content;
-            }
-            
-            messageContent.appendChild(messageBubble);
-            messageDiv.appendChild(messageContent);
-            conversationHistory.appendChild(messageDiv);
-            
-            // 滚动到底部
-            conversationHistory.scrollTop = conversationHistory.scrollHeight;
-            
-            return messageDiv;
-        }
-
-        // 结束游戏
-        function endGame(isWin, correctSubstance) {
-            gameState.isPlaying = false;
-            document.getElementById('gameState').textContent = '已结束';
-            document.getElementById('questionInput').disabled = true;
-            document.getElementById('submitBtn').disabled = true;
-
-            // 显示游戏结束模态框
-            const modal = new bootstrap.Modal(document.getElementById('gameEndModal'));
-            const resultIcon = document.getElementById('resultIcon');
-            const resultTitle = document.getElementById('resultTitle');
-            const resultMessage = document.getElementById('resultMessage');
-            const finalGuessCount = document.getElementById('finalGuessCount');
-            const correctSubstanceEl = document.getElementById('correctSubstance');
-
-            if (isWin) {
-                resultIcon.className = 'bi bi-check-circle display-4 text-primary mb-3';
-                resultTitle.textContent = '恭喜你，你猜对了！';
-                resultMessage.textContent = '你太有实力了！';
-            } else {
-                resultIcon.className = 'bi bi-x-circle display-4 text-danger mb-3';
-                resultTitle.textContent = '游戏结束';
-                resultMessage.textContent = '你退出了游戏';
-            }
-
-            finalGuessCount.textContent = gameState.guessCount;
-            correctSubstanceEl.textContent = correctSubstance;
-
-            modal.show();
-        }
-
-        // 退出游戏
-        function quitGame() {
-            if (gameState.isPlaying) {
-                if (confirm('确定要退出游戏吗？')) {
-                    // 调用后端结束游戏接口，获取正确物质名称
-                    fetch('/practice/end', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ game_id: gameState.gameId })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            // 使用获取到的正确物质名称结束游戏
-                            endGame(false, data.correct_substance);
-                        } else {
-                            // 如果出错，显示错误信息并使用默认值
-                            showError(data.message);
-                            endGame(false, '未知');
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        showError('退出游戏失败，请稍后重试');
-                        endGame(false, '未知');
-                    });
-                }
-            } else {
-                window.location.href = '/';
-            }
-        }
-
-        // 显示错误信息
-        function showError(message) {
-            const conversationHistory = document.getElementById('conversationHistory');
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'text-center text-danger py-3';
-            errorDiv.textContent = message;
-            conversationHistory.appendChild(errorDiv);
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/practice.js') }}"></script>
 {% endblock %}

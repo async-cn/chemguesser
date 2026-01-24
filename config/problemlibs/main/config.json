@@ -1,0 +1,29 @@
+{
+    "weights": {
+        "beginner": {
+            "easy": 0.9,
+            "mideasy": 0.1,
+            "mid": 0
+        },
+        "easy": {
+            "easy": 0.5,
+            "mideasy": 0.5,
+            "mid": 0
+        },
+        "advanced": {
+            "easy": 0.2,
+            "mideasy": 0.8,
+            "mid": 0
+        },
+        "medium": {
+            "easy": 0.1,
+            "mideasy": 0.8,
+            "mid": 0.1
+        },
+        "hard": {
+            "easy": 0,
+            "mideasy": 0.3,
+            "mid": 0.7
+        }
+    }
+}

@@ -19,4 +19,5 @@ def main() -> None:
     print(f"游戏结束 答案：{p}")
 
 if __name__ == "__main__":
-    main()
+    print("\033[91m由于题库优化，run-terminal.py不再可用。\033[0m")
+    # main()

@@ -8,23 +8,24 @@
             <p class="lead">一款有点好玩的化学猜盐小游戏</p>
 <!--            <hr class="my-4">-->
             <!--<p>选择你想要的游戏模式，开始你的化学探索之旅吧！</p>-->
+<!--            <hr class="my-4">-->
+<!--            <h4 style="margin: 12px 0">选择游戏模式</h4>-->
+            <div class="d-flex gap-3">
+                <a class="btn btn-primary btn-lg" href="{{ url_for('games.practice') }}" role="button">单人练习</a>
+                <a class="btn btn-success btn-lg" href="javascript:block();" role="button">玩家对战</a>
+                <a class="btn btn-warning btn-lg" href="javascript:block();" role="button">人机对战</a>
+            </div>
+            <br/>
             {% if notice_html %}
             <div class="card" style="margin-bottom:12px">
                 <div class="card-header ">
-                    <h5 class="card-title" style="margin-bottom: 0;"><x></x>公告</h5>
+                    <h5 class="card-title" style="margin-bottom: 0;">公告</h5>
                 </div>
                 <div class="card-body">
                     {{ notice_html | safe }}
                 </div>
             </div>
             {% endif %}
-<!--            <hr class="my-4">-->
-<!--            <h4 style="margin: 12px 0">选择游戏模式</h4>-->
-            <div class="d-flex gap-3">
-                <a class="btn btn-primary btn-lg" href="{{ url_for('games.practice') }}" role="button">单人练习</a>
-                <a class="btn btn-success btn-lg" href="javascript:block();" role="button">玩家对战</a>
-                <a class="btn btn-warning btn-lg" href="javascript:block();" role="button">AI对战</a>
-            </div>
         </div>
         
         <div class="row mt-5 h-100">
@@ -53,10 +54,10 @@
             <div class="col-md-4 h-100">
                 <div class="card h-100 d-flex flex-column">
                     <div class="card-body flex-grow-1 d-flex flex-column">
-                        <h5 class="card-title">AI对战</h5>
-                        <p class="card-text">与智能AI对手进行对战。</p>
+                        <h5 class="card-title">人机对战</h5>
+                        <p class="card-text">与智能人机进行对战。</p>
                         <div class="mt-auto">
-                            <a href="javascript:block();" class="btn btn-warning">挑战AI</a>
+                            <a href="javascript:block();" class="btn btn-warning">挑战人机</a>
                         </div>
                     </div>
                 </div>

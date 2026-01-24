@@ -1,20 +1,24 @@
-# ChemGuesser 化学猜盐
-
-![](https://img.shields.io/badge/License-MIT-blue)
-![](https://img.shields.io/badge/Version-1.0-green)
-![](https://img.shields.io/badge/Python-3.x-blue)
+<div align="center">
+    <img src="https://www.chemguesser.com/static/chemguesser-logo.png" width="100" height="100"/>
+    <h1 style="margin-top: -15px">ChemGuesser 化学猜盐</h1>
+    <p>一款有点好玩的化学猜盐小游戏</p>
+    <img src="https://img.shields.io/badge/License-MIT-blue">
+    <img src="https://img.shields.io/badge/Version-1.0-green">
+    <img src="https://img.shields.io/badge/Python-3.x-blue">
+</div>
 
 > [!NOTE]
 >
 > TODO: 
+> 
+> 详细开发计划见[docs/dev_plan.md](docs/dev_plan.md)
 > 
 >  - 优化题库，将元素和物质信息直接嵌入题库。
 >  - 制作有机题库。
 >  - 开发AI对战模式。
 >  - 开发题目信息统计，优化题库难度划分机制。
 >  - 使用 Redis 实现验证码，优化性能。
-
-一款有点好玩的化学猜盐小游戏。
+>  - 开发PVP模式。
 
 ## 使用方法
 
@@ -50,6 +54,9 @@ WEBSITE_PORT=2300
 FLASK_ENV=production
 SQLALCHEMY_DATABASE_URI=sqlite:///chemguesser.db
 ```
+> [!NOTE]
+> 
+> 启动前请务必更改.env中的apikey等必要设置。
 
 配置完成后，将 .env.example 文件 **重命名为为 .env** 。
 

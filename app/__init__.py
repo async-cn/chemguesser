@@ -42,11 +42,13 @@ def create_app(config_class=Config):
     # 注册蓝图（放在最后，避免循环导入）
     from app.main.routes import main
     from app.users.routes import users
+    from app.users.admin_routes import admin
     from app.games.routes import games
     from app.api.routes import api
     
     app.register_blueprint(main)
     app.register_blueprint(users)
+    app.register_blueprint(admin)
     app.register_blueprint(games)
     app.register_blueprint(api)
 
